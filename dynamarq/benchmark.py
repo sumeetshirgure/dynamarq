@@ -12,11 +12,11 @@ class Benchmark:
         """Returns a dynamic circuit with identical measurement statistics used for reference."""
 
     @abc.abstractmethod
-    def qiskit_circuit(self) :
+    def qiskit_circuits(self) :
         """Returns a sequence of Qiskit circuits with the current benchmark parameters."""
 
     @abc.abstractmethod
-    def guppy_circuit(self) :
+    def guppy_circuits(self) :
         """Returns a sequence of guppy circuits with the current benchmark parameters."""
 
     @abc.abstractmethod

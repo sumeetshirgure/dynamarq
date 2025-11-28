@@ -40,7 +40,7 @@ class GHZ(Benchmark) :
         return circuit
 
 
-    def qiskit_circuit(self, mcm = True, stretch_dd = False) :
+    def qiskit_circuits(self, mcm = True, stretch_dd = False) :
         data = QuantumRegister(self.n, 'data')
         anc  = QuantumRegister(self.n-1, 'anc')
         meas = ClassicalRegister(self.n, 'meas')
@@ -89,10 +89,10 @@ class GHZ(Benchmark) :
 
         circuit.measure(data, meas)
 
-        return circuit
+        return [circuit]
 
 
-    def guppy_circuit(self) :
+    def guppy_circuits(self) :
 
         @guppy
         def circuit_2() -> None :
@@ -215,20 +215,20 @@ class GHZ(Benchmark) :
             for v in meas : result('meas', v)
 
         match self.n :
-            case 2  : return circuit_2
-            case 3  : return circuit_3
-            case 5  : return circuit_5
-            case 10 : return circuit_10
-            case 15 : return circuit_15
-            case 20 : return circuit_20
-            case 25 : return circuit_25
-            case 30 : return circuit_30
+            case 2  : return [circuit_2]
+            case 3  : return [circuit_3]
+            case 5  : return [circuit_5]
+            case 10 : return [circuit_10]
+            case 15 : return [circuit_15]
+            case 20 : return [circuit_20]
+            case 25 : return [circuit_25]
+            case 30 : return [circuit_30]
 
         choices = [2, 3, 5, 10, 15, 20, 25, 30]
 
         raise ValueError(f"Only choices are {choices}")
 
-    def qiskit_score(self, counts: dict) -> float:
+    def qiskit_score(self, counts_list) -> float:
         """Compute the Hellinger fidelity between the experimental and ideal
         qiskit results, i.e., 50% probabilty of measuring the all-zero state and 50%
         probability of measuring the all-one state.
@@ -236,22 +236,27 @@ class GHZ(Benchmark) :
         # Create an equal weighted distribution between the all-0 and all-1 states
         ideal_dist = {b * self.n: 0.5 for b in ["0", "1"]}
 
-        total_shots = sum(counts.values())
+        fidelity_sum = 0.0
 
-        device_hist = dict()
+        for counts in counts_list :
+            total_shots = sum(counts.values())
 
-        for bitstr, count in counts.items() :
-            data_qubits = bitstr[-1:-1-self.n:-1]
-            if data_qubits not in device_hist :
-                device_hist[data_qubits] = 0
-            device_hist[data_qubits] += count
+            device_hist = dict()
 
-        device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
+            for bitstr, count in counts.items() :
+                data_qubits = bitstr[-1:-1-self.n:-1]
+                if data_qubits not in device_hist :
+                    device_hist[data_qubits] = 0
+                device_hist[data_qubits] += count
 
-        return hellinger_fidelity(ideal_dist, device_dist)
+            device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
+
+            fidelity_sum += hellinger_fidelity(ideal_dist, device_dist)
+
+        return fidelity_sum / len(counts_list)
 
 
-    def guppy_score(self, results) :
+    def guppy_score(self, results_list) :
         """Compute the Hellinger fidelity between the experimental and ideal
         guppy results, i.e., 50% probabilty of measuring the all-zero state and 50%
         probability of measuring the all-one state.
@@ -259,19 +264,24 @@ class GHZ(Benchmark) :
         # Create an equal weighted distribution between the all-0 and all-1 states
         ideal_dist = {b * self.n: 0.5 for b in ["0", "1"]}
 
-        collated_counts = results.collated_counts()
+        fidelity_sum = 0.0
 
-        total_shots = sum(collated_counts.values())
+        for results in results_list :
+            collated_counts = results.collated_counts()
 
-        device_hist = dict()
+            total_shots = sum(collated_counts.values())
 
-        for key in collated_counts.keys() :
-            string = key[0][1]
-            freq = collated_counts[ (('meas', string),) ]
-            if string not in device_hist :
-                device_hist[ string ] = 0
-            device_hist[string] += freq
+            device_hist = dict()
 
-        device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
+            for key in collated_counts.keys() :
+                string = key[0][1]
+                freq = collated_counts[ (('meas', string),) ]
+                if string not in device_hist :
+                    device_hist[ string ] = 0
+                device_hist[string] += freq
 
-        return hellinger_fidelity(ideal_dist, device_dist)
+            device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
+
+            fidelity_sum += hellinger_fidelity(ideal_dist, device_dist)
+
+        return fidelity_sum / len(results_list)
