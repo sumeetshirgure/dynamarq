@@ -252,8 +252,6 @@ class GHZReset(Benchmark) :
                 if i < 29//2 :
                     result('meas', meas1[i])
 
-        self.choices = [3, 5, 11, 15, 21, 25, 29]
-
         match self.n :
             case 3  : return [circuit_3]
             case 5  : return [circuit_5]
