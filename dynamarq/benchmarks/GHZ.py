@@ -11,6 +11,9 @@ from qiskit.quantum_info import hellinger_fidelity
 import guppylang
 from guppylang import guppy
 
+from guppylang.std.builtins import owned, array, result, panic
+from guppylang.std.quantum import qubit, measure, measure_array, h, cx, x
+
 
 class GHZ(Benchmark) :
     """Represents the GHZ state preparation benchmark parameterized
@@ -89,9 +92,145 @@ class GHZ(Benchmark) :
         return circuit
 
 
+    def guppy_circuit(self) :
+
+        @guppy
+        def circuit_2() -> None :
+            data = array(qubit() for _ in range(2))
+            anc  = array(qubit() for _ in range(1))
+            for i in range(2) : h(data[i])
+            for i in range(1) : cx(data[i], anc[i])
+            for i in range(1) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(1) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_3() -> None :
+            data = array(qubit() for _ in range(3))
+            anc  = array(qubit() for _ in range(2))
+            for i in range(3) : h(data[i])
+            for i in range(2) : cx(data[i], anc[i])
+            for i in range(2) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(2) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_5() -> None :
+            data = array(qubit() for _ in range(5))
+            anc  = array(qubit() for _ in range(4))
+            for i in range(5) : h(data[i])
+            for i in range(4) : cx(data[i], anc[i])
+            for i in range(4) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(4) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_10() -> None :
+            data = array(qubit() for _ in range(10))
+            anc  = array(qubit() for _ in range(9))
+            for i in range(10) : h(data[i])
+            for i in range(9) : cx(data[i], anc[i])
+            for i in range(9) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(9) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_15() -> None :
+            data = array(qubit() for _ in range(15))
+            anc  = array(qubit() for _ in range(14))
+            for i in range(15) : h(data[i])
+            for i in range(14) : cx(data[i], anc[i])
+            for i in range(14) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(14) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_20() -> None :
+            data = array(qubit() for _ in range(20))
+            anc  = array(qubit() for _ in range(19))
+            for i in range(20) : h(data[i])
+            for i in range(19) : cx(data[i], anc[i])
+            for i in range(19) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(19) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_25() -> None :
+            data = array(qubit() for _ in range(25))
+            anc  = array(qubit() for _ in range(24))
+            for i in range(25) : h(data[i])
+            for i in range(24) : cx(data[i], anc[i])
+            for i in range(24) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(24) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_30() -> None :
+            data = array(qubit() for _ in range(30))
+            anc  = array(qubit() for _ in range(29))
+            for i in range(30) : h(data[i])
+            for i in range(29) : cx(data[i], anc[i])
+            for i in range(29) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(29) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        match self.n :
+            case 2  : return circuit_2
+            case 3  : return circuit_3
+            case 5  : return circuit_5
+            case 10 : return circuit_10
+            case 15 : return circuit_15
+            case 20 : return circuit_20
+            case 25 : return circuit_25
+            case 30 : return circuit_30
+
+        choices = [2, 3, 5, 10, 15, 20, 25, 30]
+
+        raise ValueError(f"Only choices are {choices}")
+
     def qiskit_score(self, counts: dict) -> float:
         """Compute the Hellinger fidelity between the experimental and ideal
-        results, i.e., 50% probabilty of measuring the all-zero state and 50%
+        qiskit results, i.e., 50% probabilty of measuring the all-zero state and 50%
         probability of measuring the all-one state.
         """
         # Create an equal weighted distribution between the all-0 and all-1 states
@@ -100,13 +239,38 @@ class GHZ(Benchmark) :
         total_shots = sum(counts.values())
 
         device_hist = dict()
+
         for bitstr, count in counts.items() :
             data_qubits = bitstr[-1:-1-self.n:-1]
-
             if data_qubits not in device_hist :
                 device_hist[data_qubits] = 0
-
             device_hist[data_qubits] += count
+
+        device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
+
+        return hellinger_fidelity(ideal_dist, device_dist)
+
+
+    def guppy_score(self, results) :
+        """Compute the Hellinger fidelity between the experimental and ideal
+        guppy results, i.e., 50% probabilty of measuring the all-zero state and 50%
+        probability of measuring the all-one state.
+        """
+        # Create an equal weighted distribution between the all-0 and all-1 states
+        ideal_dist = {b * self.n: 0.5 for b in ["0", "1"]}
+
+        collated_counts = results.collated_counts()
+
+        total_shots = sum(collated_counts.values())
+
+        device_hist = dict()
+
+        for key in collated_counts.keys() :
+            string = key[0][1]
+            freq = collated_counts[ (('meas', string),) ]
+            if string not in device_hist :
+                device_hist[ string ] = 0
+            device_hist[string] += freq
 
         device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
 
