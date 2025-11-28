@@ -23,8 +23,9 @@ class GHZ(Benchmark) :
     the experimental and ideal probability distributions.
     """
     def __init__(self, num_qubits: int) :
+        self.choices = [2, 3, 5, 10, 15, 20, 25, 30]
         self.n = num_qubits
-        assert self.n > 0, f"n(={num_qubits}) must be a positive integer"
+        assert self.n in self.choices, f"n(={num_qubits}) must be among {self.choices}"
 
 
     def reference_circuit(self) :
@@ -224,9 +225,7 @@ class GHZ(Benchmark) :
             case 25 : return [circuit_25]
             case 30 : return [circuit_30]
 
-        choices = [2, 3, 5, 10, 15, 20, 25, 30]
-
-        raise ValueError(f"Only choices are {choices}")
+        raise ValueError(f"Only choices are {self.choices}")
 
     def qiskit_score(self, counts_list) -> float:
         """Compute the Hellinger fidelity between the experimental and ideal
