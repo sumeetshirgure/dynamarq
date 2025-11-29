@@ -99,158 +99,69 @@ class GHZReset(Benchmark) :
     def guppy_circuits(self) :
         assert self.n > 1 and self.n % 2 == 1, f"{self.n} must be an odd integer > 1"
 
+        n = guppy.nat_var('n')
+        n1 = guppy.nat_var('n1')
+
+        @guppy
+        def base_circuit(data: array[qubit, n] @owned, anc: array[qubit, n1] @owned) -> None:
+            for i in range(n) : h(data[i])
+            for i in range(n1) : cx(data[i], anc[i])
+            for i in range(n1) : cx(data[i+1], anc[i])
+            cr = measure_array(anc)
+            parity = 0
+            for i in range(n1) :
+                parity = parity ^ int(cr[i])
+                if parity == 1 : x(data[i+1])
+            anc = array(qubit() for _ in range(n1))
+            for i in range(n1) : cx(data[i], anc[i])
+            meas0 = measure_array(data)
+            meas1 = measure_array(anc)
+            for i in range(n) :
+                result('meas', meas0[i])
+                if i < n1 :
+                    result('meas', meas1[i])
+
         @guppy
         def circuit_3() -> None :
             data = array(qubit() for _ in range(2))
             anc  = array(qubit() for _ in range(1))
-            for i in range(1+3//2) : h(data[i])
-            for i in range(3//2) : cx(data[i], anc[i])
-            for i in range(3//2) : cx(data[i+1], anc[i])
-            cr = measure_array(anc)
-            parity = 0
-            for i in range(3//2) :
-                parity = parity ^ int(cr[i])
-                if parity == 1 : x(data[i+1])
-            anc  = array(qubit() for _ in range(1))
-            for i in range(3//2) : cx(data[i], anc[i])
-            meas0 = measure_array(data)
-            meas1 = measure_array(anc)
-            for i in range(3//2+1) :
-                result('meas', meas0[i])
-                if i < 3//2 :
-                    result('meas', meas1[i])
-
+            base_circuit(data, anc)
 
         @guppy
         def circuit_5() -> None :
             data = array(qubit() for _ in range(3))
             anc  = array(qubit() for _ in range(2))
-            for i in range(1+5//2) : h(data[i])
-            for i in range(5//2) : cx(data[i], anc[i])
-            for i in range(5//2) : cx(data[i+1], anc[i])
-            cr = measure_array(anc)
-            parity = 0
-            for i in range(5//2) :
-                parity = parity ^ int(cr[i])
-                if parity == 1 : x(data[i+1])
-            anc  = array(qubit() for _ in range(2))
-            for i in range(5//2) : cx(data[i], anc[i])
-            meas0 = measure_array(data)
-            meas1 = measure_array(anc)
-            for i in range(5//2+1) :
-                result('meas', meas0[i])
-                if i < 5//2 :
-                    result('meas', meas1[i])
-
+            base_circuit(data, anc)
 
         @guppy
         def circuit_11() -> None :
             data = array(qubit() for _ in range(6))
             anc  = array(qubit() for _ in range(5))
-            for i in range(1+11//2) : h(data[i])
-            for i in range(11//2) : cx(data[i], anc[i])
-            for i in range(11//2) : cx(data[i+1], anc[i])
-            cr = measure_array(anc)
-            parity = 0
-            for i in range(11//2) :
-                parity = parity ^ int(cr[i])
-                if parity == 1 : x(data[i+1])
-            anc  = array(qubit() for _ in range(5))
-            for i in range(11//2) : cx(data[i], anc[i])
-            meas0 = measure_array(data)
-            meas1 = measure_array(anc)
-            for i in range(11//2+1) :
-                result('meas', meas0[i])
-                if i < 11//2 :
-                    result('meas', meas1[i])
-
+            base_circuit(data, anc)
 
         @guppy
         def circuit_15() -> None :
             data = array(qubit() for _ in range(8))
             anc  = array(qubit() for _ in range(7))
-            for i in range(1+15//2) : h(data[i])
-            for i in range(15//2) : cx(data[i], anc[i])
-            for i in range(15//2) : cx(data[i+1], anc[i])
-            cr = measure_array(anc)
-            parity = 0
-            for i in range(15//2) :
-                parity = parity ^ int(cr[i])
-                if parity == 1 : x(data[i+1])
-            anc  = array(qubit() for _ in range(7))
-            for i in range(15//2) : cx(data[i], anc[i])
-            meas0 = measure_array(data)
-            meas1 = measure_array(anc)
-            for i in range(15//2+1) :
-                result('meas', meas0[i])
-                if i < 15//2 :
-                    result('meas', meas1[i])
-
+            base_circuit(data, anc)
 
         @guppy
         def circuit_21() -> None :
             data = array(qubit() for _ in range(11))
             anc  = array(qubit() for _ in range(10))
-            for i in range(1+21//2) : h(data[i])
-            for i in range(21//2) : cx(data[i], anc[i])
-            for i in range(21//2) : cx(data[i+1], anc[i])
-            cr = measure_array(anc)
-            parity = 0
-            for i in range(21//2) :
-                parity = parity ^ int(cr[i])
-                if parity == 1 : x(data[i+1])
-            anc  = array(qubit() for _ in range(10))
-            for i in range(21//2) : cx(data[i], anc[i])
-            meas0 = measure_array(data)
-            meas1 = measure_array(anc)
-            for i in range(21//2+1) :
-                result('meas', meas0[i])
-                if i < 21//2 :
-                    result('meas', meas1[i])
-
+            base_circuit(data, anc)
 
         @guppy
         def circuit_25() -> None :
             data = array(qubit() for _ in range(13))
             anc  = array(qubit() for _ in range(12))
-            for i in range(1+25//2) : h(data[i])
-            for i in range(25//2) : cx(data[i], anc[i])
-            for i in range(25//2) : cx(data[i+1], anc[i])
-            cr = measure_array(anc)
-            parity = 0
-            for i in range(25//2) :
-                parity = parity ^ int(cr[i])
-                if parity == 1 : x(data[i+1])
-            anc  = array(qubit() for _ in range(12))
-            for i in range(25//2) : cx(data[i], anc[i])
-            meas0 = measure_array(data)
-            meas1 = measure_array(anc)
-            for i in range(25//2+1) :
-                result('meas', meas0[i])
-                if i < 25//2 :
-                    result('meas', meas1[i])
-
+            base_circuit(data, anc)
 
         @guppy
         def circuit_29() -> None :
             data = array(qubit() for _ in range(15))
             anc  = array(qubit() for _ in range(14))
-            for i in range(1+29//2) : h(data[i])
-            for i in range(29//2) : cx(data[i], anc[i])
-            for i in range(29//2) : cx(data[i+1], anc[i])
-            cr = measure_array(anc)
-            parity = 0
-            for i in range(29//2) :
-                parity = parity ^ int(cr[i])
-                if parity == 1 : x(data[i+1])
-            anc  = array(qubit() for _ in range(14))
-            for i in range(29//2) : cx(data[i], anc[i])
-            meas0 = measure_array(data)
-            meas1 = measure_array(anc)
-            for i in range(29//2+1) :
-                result('meas', meas0[i])
-                if i < 29//2 :
-                    result('meas', meas1[i])
+            base_circuit(data, anc)
 
         match self.n :
             case 3  : return [circuit_3]
