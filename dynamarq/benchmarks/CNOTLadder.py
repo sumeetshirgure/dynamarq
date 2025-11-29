@@ -8,8 +8,6 @@ from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit.classical import expr
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 
-from qiskit.quantum_info import hellinger_fidelity
-
 
 class CNOTLadder(Benchmark):
     """
@@ -30,8 +28,7 @@ class CNOTLadder(Benchmark):
         random.seed(1)
 
         # Initialize DFE SPAM circuits.
-        self.dfe_subcircuits = clifford_dfe(
-                self.clifford_repr, data_qubits, num_dfe_samples)
+        self.dfe_subcircuits = clifford_dfe(self.clifford_repr, data_qubits, num_dfe_samples)
 
 
     def reference_circuit(self) :
