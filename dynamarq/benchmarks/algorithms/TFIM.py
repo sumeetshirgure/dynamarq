@@ -10,6 +10,13 @@ from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 
 from qiskit_aer import AerSimulator
 
+import guppylang
+from guppylang import guppy
+
+from guppylang.std.builtins import owned, array, result, panic
+from guppylang.std.quantum import qubit, measure, measure_array, h, x, z, cx, rx, rz, discard_array
+from guppylang.std.angles import angle
+
 
 class TFIM(Benchmark) :
     """Represents a quantum simulation benchmark for the 1D transverse
@@ -27,10 +34,18 @@ class TFIM(Benchmark) :
         self.n = num_sites
         self.steps = num_steps
 
+        self.choices = [ (3, 2), (3, 5), (3, 20),
+                         (5, 2), (5, 5), (5, 20),
+                         (10, 2), (10, 5), (10, 20),
+                         (30, 2), (30, 5), (30, 20) ]
+
+        assert (self.n, self.steps) in self.choices, \
+                f"(num_sites, num_steps) should be in {self.choices}"
+
         self.default_h = -7.0
         self.default_J = 1.0
         self.default_dt = 2 * pi * 1 / 30 * 0.25
-    
+
 
     def reference_circuits(self, h=None, J=None, dt=None) :
         if h is None : h = self.default_h
@@ -129,7 +144,189 @@ class TFIM(Benchmark) :
         return [circuit]
 
 
-    def average_magnetization(self, counts):
+    def guppy_circuits(self) :
+        theta_x_over_pi = -0.11666666666666665
+        theta_zz_over_pi = -0.03333333333333333
+
+        n = guppy.nat_var('n')
+        n1 = guppy.nat_var('n1')
+        steps = guppy.nat_var('steps')
+
+        @guppy
+        def base_circuit(data: array[qubit, n] @owned,
+                         anc: array[qubit, n1] @owned,
+                         steps: int) -> array[qubit, n1] :
+
+            for step in range(steps) :
+                for i in range(n) :
+                    rx(data[i], angle(-0.11666666666666665))
+                for i in range(0, n1, 2) :
+                    cx(data[i], anc[i])
+                    cx(data[i+1], anc[i])
+                    rz(anc[i], angle(-0.03333333333333333))
+                    h(anc[i])
+                for i in range(1, n1, 2) :
+                    cx(data[i], anc[i])
+                    cx(data[i+1], anc[i])
+                    rz(anc[i], angle(-0.03333333333333333))
+                    h(anc[i])
+                cr = measure_array(anc)
+                for i in range(0, n1, 2) :
+                    if cr[i] :
+                        z(data[i])
+                        z(data[i+1])
+                for i in range(1, n1, 2) :
+                    if cr[i] :
+                        z(data[i])
+                        z(data[i+1])
+                for i in range(n) :
+                    rx(data[i], angle(-0.11666666666666665))
+                anc = array(qubit() for _ in range(n1))
+
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+            return anc
+            
+
+        @guppy
+        def circuit_3_2() -> None :
+            data = array(qubit() for _ in range(3))
+            anc  = array(qubit() for _ in range(2))
+            anc_final = base_circuit(data, anc, 2)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_3_5() -> None :
+            data = array(qubit() for _ in range(3))
+            anc  = array(qubit() for _ in range(2))
+            anc_final = base_circuit(data, anc, 5)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_3_20() -> None :
+            data = array(qubit() for _ in range(3))
+            anc  = array(qubit() for _ in range(2))
+            anc_final = base_circuit(data, anc, 20)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_5_2() -> None :
+            data = array(qubit() for _ in range(5))
+            anc  = array(qubit() for _ in range(4))
+            anc_final = base_circuit(data, anc, 2)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_5_5() -> None :
+            data = array(qubit() for _ in range(5))
+            anc  = array(qubit() for _ in range(4))
+            anc_final = base_circuit(data, anc, 5)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_5_20() -> None :
+            data = array(qubit() for _ in range(5))
+            anc  = array(qubit() for _ in range(4))
+            anc_final = base_circuit(data, anc, 20)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_10_2() -> None :
+            data = array(qubit() for _ in range(10))
+            anc  = array(qubit() for _ in range(9))
+            anc_final = base_circuit(data, anc, 2)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_10_5() -> None :
+            data = array(qubit() for _ in range(10))
+            anc  = array(qubit() for _ in range(9))
+            anc_final = base_circuit(data, anc, 5)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_10_20() -> None :
+            data = array(qubit() for _ in range(10))
+            anc  = array(qubit() for _ in range(9))
+            anc_final = base_circuit(data, anc, 20)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_30_2() -> None :
+            data = array(qubit() for _ in range(30))
+            anc  = array(qubit() for _ in range(29))
+            anc_final = base_circuit(data, anc, 2)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_30_5() -> None :
+            data = array(qubit() for _ in range(30))
+            anc  = array(qubit() for _ in range(29))
+            anc_final = base_circuit(data, anc, 5)
+            discard_array(anc_final)
+
+        @guppy
+        def circuit_30_20() -> None :
+            data = array(qubit() for _ in range(30))
+            anc  = array(qubit() for _ in range(29))
+            anc_final = base_circuit(data, anc, 20)
+            discard_array(anc_final)
+
+
+        match (self.n, self.steps) :
+            case (3, 2) : return [circuit_3_2]
+            case (3, 5) : return [circuit_3_5]
+            case (3, 20) : return [circuit_3_20]
+            case (5, 2) : return [circuit_5_2]
+            case (5, 5) : return [circuit_5_5]
+            case (5, 20) : return [circuit_5_20]
+            case (10, 2) : return [circuit_10_2]
+            case (10, 5) : return [circuit_10_5]
+            case (10, 20) : return [circuit_10_20]
+            case (30, 2) : return [circuit_30_2]
+            case (30, 5) : return [circuit_30_5]
+            case (30, 20) : return [circuit_30_20]
+
+        raise ValueError(f"Only choices are {self.choices}")
+
+
+    def guppy_score(self, results_list) :
+        results = results_list[0]
+
+        collated_counts = results.collated_counts()
+        total_shots = sum(collated_counts.values())
+
+        device_hist = dict()
+        for key in collated_counts.keys() :
+            string = key[0][1]
+            freq = collated_counts[ (('meas', string),) ]
+            if string not in device_hist :
+                device_hist[ string ] = 0
+            device_hist[string] += freq
+
+        mz_ideal = self.qiskit_average_magnetization(AerSimulator(method='matrix_product_state').run(
+            self.reference_circuits()[0], shots=10000).result().get_counts())
+        mz_exp = self.guppy_average_magnetization(device_hist)
+        return 1 - abs(mz_ideal - mz_exp) / 2
+
+
+    def guppy_average_magnetization(self, counts):
+        mag = 0.0
+        for index in range(self.n) :
+            z_exp = 0.0
+            tot = 0.0
+            for bitstring, value in counts.items():
+                bit = int(bitstring[index])
+                sign = 1 if bit == 0 else -1
+                z_exp += sign * value
+                tot += value
+            z_exp /= tot
+            mag += z_exp
+        return mag / self.n
+
+
+    def qiskit_average_magnetization(self, counts):
         mag = 0.0
         for index in range(self.n) :
             z_exp = 0.0
@@ -145,7 +342,7 @@ class TFIM(Benchmark) :
 
 
     def qiskit_score(self, counts_list) :
-        mz_ideal = self.average_magnetization(AerSimulator(method='matrix_product_state').run(
+        mz_ideal = self.qiskit_average_magnetization(AerSimulator(method='matrix_product_state').run(
                 self.reference_circuits()[0], shots=10000).result().get_counts())
-        mz_exp = self.average_magnetization(counts_list[0])
+        mz_exp = self.qiskit_average_magnetization(counts_list[0])
         return 1 - abs(mz_ideal - mz_exp) / 2
