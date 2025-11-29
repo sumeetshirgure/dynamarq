@@ -6,6 +6,7 @@ from .benchmarks import (
         CNOTLadder,
         Fanout,
         LongRangeCNOT,
+        LongRangeCNOTSparse,
         )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
         "CNOTLadder",
         "Fanout",
         "LongRangeCNOT",
+        "LongRangeCNOTSparse",
         ]
