@@ -5,6 +5,7 @@ from .benchmarks import (
         GHZReset,
         CNOTLadder,
         Fanout,
+        LongRangeCNOT,
         )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
         "GHZReset",
         "CNOTLadder",
         "Fanout",
+        "LongRangeCNOT",
         ]
