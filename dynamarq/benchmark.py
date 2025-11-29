@@ -8,8 +8,8 @@ class Benchmark:
     """
 
     @abc.abstractmethod
-    def reference_circuit(self) :
-        """Returns a dynamic circuit with identical measurement statistics used for reference."""
+    def reference_circuits(self) :
+        """Returns a simplified circuit with identical measurement statistics used for reference."""
 
     @abc.abstractmethod
     def qiskit_circuits(self) :

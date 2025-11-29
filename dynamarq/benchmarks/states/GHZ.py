@@ -28,7 +28,7 @@ class GHZ(Benchmark) :
         assert self.n in self.choices, f"n(={num_qubits}) must be among {self.choices}"
 
 
-    def reference_circuit(self) :
+    def reference_circuits(self) :
         data = QuantumRegister(self.n, 'data')
         meas = ClassicalRegister(self.n, 'meas')
         circuit = QuantumCircuit(data, meas)
@@ -38,7 +38,7 @@ class GHZ(Benchmark) :
             circuit.cx(i, i+1)
 
         circuit.measure(data, meas)
-        return circuit
+        return [circuit]
 
 
     def qiskit_circuits(self, mcm = True, stretch_dd = False) :

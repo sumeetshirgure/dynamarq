@@ -20,7 +20,7 @@ class CNOTLadder(Benchmark):
         assert num_qubits > 1, "Number of qubits must be > 1."
 
         self.n = num_qubits
-        self.clifford_repr = self.reference_circuit()
+        self.clifford_repr = self.reference_circuits()[0]
 
         data_qubits = [0] * (self.n-1) + [1] * self.n # Qiskit convention
 
@@ -31,7 +31,7 @@ class CNOTLadder(Benchmark):
         self.dfe_subcircuits = clifford_dfe(self.clifford_repr, data_qubits, num_dfe_samples)
 
 
-    def reference_circuit(self) :
+    def reference_circuits(self) :
         rep_data = QuantumRegister(self.n, 'rep_data')
         rep_anc  = QuantumRegister(self.n-1, 'rep_anc')
         rep_c0   = ClassicalRegister(self.n, 'rep_c0')
@@ -43,7 +43,7 @@ class CNOTLadder(Benchmark):
         for idx in range(self.n-1, 0, -1) :
             clifford_repr.cx(rep_data[idx-1], rep_data[idx])
 
-        return clifford_repr
+        return [clifford_repr]
 
 
     def dynamic_circuit(self, mcm=True, stretch_dd=False) :

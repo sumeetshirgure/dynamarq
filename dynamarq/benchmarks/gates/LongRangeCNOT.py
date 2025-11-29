@@ -20,7 +20,7 @@ class LongRangeCNOT(Benchmark):
         assert num_ancillas >= 1, "Number of ancillas must be >= 1."
         self.n = num_ancillas
 
-        self.clifford_repr = self.reference_circuit()
+        self.clifford_repr = self.reference_circuits()[0]
 
         data_qubits = [0] * (self.n) + [1] * (2) # Qiskit convention
 
@@ -31,7 +31,7 @@ class LongRangeCNOT(Benchmark):
         self.dfe_subcircuits = clifford_dfe(self.clifford_repr, data_qubits, num_dfe_samples)
 
 
-    def reference_circuit(self) :
+    def reference_circuits(self) :
         rep_data = QuantumRegister(2, 'rep_data')
         rep_anc  = QuantumRegister(self.n, 'rep_anc')
         rep_c0   = ClassicalRegister(2, 'rep_c0')
@@ -40,7 +40,7 @@ class LongRangeCNOT(Benchmark):
         clifford_repr = QuantumCircuit(rep_data, rep_anc, rep_c0, rep_c1)
         clifford_repr.cx(rep_data[0], rep_data[1])
 
-        return clifford_repr
+        return [clifford_repr]
 
 
     def dynamic_circuit(self, mcm=True, stretch_dd=False) :
