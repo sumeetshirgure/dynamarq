@@ -12,6 +12,7 @@ from .gates import (
 
 from .algorithms import (
         TFIM,
+        IPE,
     )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
         "LongRangeCNOT",
         "LongRangeCNOTSparse",
         "TFIM",
+        "IPE",
         ]
