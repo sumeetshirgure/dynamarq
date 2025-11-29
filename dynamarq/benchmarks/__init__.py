@@ -10,6 +10,10 @@ from .gates import (
         LongRangeCNOTSparse,
     )
 
+from .algorithms import (
+        TFIM,
+    )
+
 __all__ = [
         "GHZ",
         "GHZReset",
@@ -17,4 +21,5 @@ __all__ = [
         "Fanout",
         "LongRangeCNOT",
         "LongRangeCNOTSparse",
+        "TFIM",
         ]
