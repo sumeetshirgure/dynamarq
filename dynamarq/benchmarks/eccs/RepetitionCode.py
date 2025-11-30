@@ -126,3 +126,200 @@ class RepetitionCode(Benchmark) :
             fidelity_sum += hellinger_fidelity(ideal_dist, device_dist)
 
         return fidelity_sum / len(counts_list)
+
+
+    def guppy_circuits(self) :
+
+        @guppy
+        def circuit_3_ket1() -> None :
+            data = array(qubit() for _ in range(3))
+            anc  = array(qubit() for _ in range(2))
+            # Prepare initial state.
+            x(data[0])
+            # Encode into repetition code.
+            cx(data[0], data[1])
+            cx(data[1], data[2])
+            # Measure syndrome.
+            cx(data[0], anc[0])
+            cx(data[1], anc[0])
+            cx(data[1], anc[1])
+            cx(data[2], anc[1])
+            syndrome = measure_array(anc)
+            # Apply correction.
+            # corrections = ( (1, (0,)), (2, (2,)), (3, (1,)) )
+            syndrome_value = 0
+            index = 0
+            for bit in syndrome :
+                if bit : syndrome_value += 2**int(index)
+                index += 1
+            if syndrome_value == 1 : x(data[0])
+            if syndrome_value == 2 : x(data[2])
+            if syndrome_value == 3 : x(data[1])
+            # Final readout
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_3_plus() -> None :
+            data = array(qubit() for _ in range(3))
+            anc  = array(qubit() for _ in range(2))
+            # Prepare initial state.
+            h(data[0])
+            # Encode into repetition code.
+            cx(data[0], data[1])
+            cx(data[1], data[2])
+            # Measure syndrome.
+            cx(data[0], anc[0])
+            cx(data[1], anc[0])
+            cx(data[1], anc[1])
+            cx(data[2], anc[1])
+            syndrome = measure_array(anc)
+            # Apply correction.
+            # corrections = ( (1, (0,)), (2, (2,)), (3, (1,)) )
+            syndrome_value = 0
+            index = 0
+            for bit in syndrome :
+                if bit : syndrome_value += 2**int(index)
+                index += 1
+            if syndrome_value == 1 : x(data[0])
+            if syndrome_value == 2 : x(data[2])
+            if syndrome_value == 3 : x(data[1])
+            # Final readout
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_5_ket1() -> None :
+            data = array(qubit() for _ in range(5))
+            anc  = array(qubit() for _ in range(4))
+            # Prepare initial state.
+            x(data[0])
+            # Encode into repetition code.
+            cx(data[0], data[1])
+            cx(data[1], data[2])
+            cx(data[2], data[3])
+            cx(data[3], data[4])
+            # Measure syndrome.
+            cx(data[0], anc[0])
+            cx(data[1], anc[0])
+            cx(data[1], anc[1])
+            cx(data[2], anc[1])
+            cx(data[2], anc[2])
+            cx(data[3], anc[2])
+            cx(data[3], anc[3])
+            cx(data[4], anc[3])
+            syndrome = measure_array(anc)
+            # Apply correction.
+            # corrections =  [(1, (0,)), (3, (1,)), (6, (2,)), (12, (3,)),
+            #                   (8, (4,)), (2, (0, 1)), (7, (0, 2)),
+            #                   (13, (0, 3)), (9, (0, 4)), (5, (1, 2)),
+            #                   (15, (1, 3)), (11, (1, 4)), (10, (2, 3)),
+            #                   (14, (2, 4)), (4, (3, 4))]
+            syndrome_value = 0
+            index = 0
+            for bit in syndrome :
+                if bit : syndrome_value += 2**int(index)
+                index += 1
+            if syndrome_value == 1  : x(data[0])
+            if syndrome_value == 3  : x(data[1])
+            if syndrome_value == 6  : x(data[2])
+            if syndrome_value == 12 : x(data[3])
+            if syndrome_value == 8  : x(data[4])
+            if syndrome_value == 2  : x(data[0]); x(data[1])
+            if syndrome_value == 7  : x(data[0]); x(data[2])
+            if syndrome_value == 13 : x(data[0]); x(data[3])
+            if syndrome_value == 9  : x(data[0]); x(data[4])
+            if syndrome_value == 5  : x(data[1]); x(data[2])
+            if syndrome_value == 15 : x(data[1]); x(data[3])
+            if syndrome_value == 11 : x(data[1]); x(data[4])
+            if syndrome_value == 10 : x(data[2]); x(data[3])
+            if syndrome_value == 14 : x(data[2]); x(data[4])
+            if syndrome_value == 4  : x(data[3]); x(data[4])
+            # Final readout
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        @guppy
+        def circuit_5_plus() -> None :
+            data = array(qubit() for _ in range(5))
+            anc  = array(qubit() for _ in range(4))
+            # Prepare initial state.
+            h(data[0])
+            # Encode into repetition code.
+            cx(data[0], data[1])
+            cx(data[1], data[2])
+            cx(data[2], data[3])
+            cx(data[3], data[4])
+            # Measure syndrome.
+            cx(data[0], anc[0])
+            cx(data[1], anc[0])
+            cx(data[1], anc[1])
+            cx(data[2], anc[1])
+            cx(data[2], anc[2])
+            cx(data[3], anc[2])
+            cx(data[3], anc[3])
+            cx(data[4], anc[3])
+            syndrome = measure_array(anc)
+            # Apply correction.
+            # corrections =  [(1, (0,)), (3, (1,)), (6, (2,)), (12, (3,)),
+            #                   (8, (4,)), (2, (0, 1)), (7, (0, 2)),
+            #                   (13, (0, 3)), (9, (0, 4)), (5, (1, 2)),
+            #                   (15, (1, 3)), (11, (1, 4)), (10, (2, 3)),
+            #                   (14, (2, 4)), (4, (3, 4))]
+            syndrome_value = 0
+            index = 0
+            for bit in syndrome :
+                if bit : syndrome_value += 2**int(index)
+                index += 1
+            if syndrome_value == 1  : x(data[0])
+            if syndrome_value == 3  : x(data[1])
+            if syndrome_value == 6  : x(data[2])
+            if syndrome_value == 12 : x(data[3])
+            if syndrome_value == 8  : x(data[4])
+            if syndrome_value == 2  : x(data[0]); x(data[1])
+            if syndrome_value == 7  : x(data[0]); x(data[2])
+            if syndrome_value == 13 : x(data[0]); x(data[3])
+            if syndrome_value == 9  : x(data[0]); x(data[4])
+            if syndrome_value == 5  : x(data[1]); x(data[2])
+            if syndrome_value == 15 : x(data[1]); x(data[3])
+            if syndrome_value == 11 : x(data[1]); x(data[4])
+            if syndrome_value == 10 : x(data[2]); x(data[3])
+            if syndrome_value == 14 : x(data[2]); x(data[4])
+            if syndrome_value == 4  : x(data[3]); x(data[4])
+            # Final readout
+            meas = measure_array(data)
+            for v in meas : result('meas', v)
+
+        match self.n :
+            case 3 : return [circuit_3_ket1, circuit_3_plus]
+            case 5 : return [circuit_5_ket1, circuit_5_plus]
+
+        raise ValueError(f"Only {self.choices} are supported.")
+
+
+    def guppy_score(self, results_list) :
+        ket1 = {b * self.n: 1 for b in ["1"]}
+        plus = {b * self.n: 0.5 for b in ["0", "1"]}
+
+        ideal_dists = [ket1, plus]
+
+        fidelity_sum = 0.0
+
+        for ideal_dist, results in zip(ideal_dists, results_list) :
+            collated_counts = results.collated_counts()
+            total_shots = sum(collated_counts.values())
+
+            device_hist = dict()
+
+            for key in collated_counts.keys() :
+                string = key[0][1]
+                freq = collated_counts[ (('meas', string),) ]
+                if string not in device_hist :
+                    device_hist[ string ] = 0
+                device_hist[ string ] += freq
+
+            device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
+
+            fidelity_sum += hellinger_fidelity(ideal_dist, device_dist)
+
+        return fidelity_sum / len(results_list)
