@@ -17,7 +17,7 @@ class LongRangeCNOTSparse(Benchmark):
     Device performance is based on the direct fidelity estimate (DFE).
     Since this is a Clifford circuit, DFE is a scalable metric.
     """
-    def __init__(self, cnot_range: int, num_dfe_samples: int=50) -> None:
+    def __init__(self, cnot_range: int, num_dfe_samples: int=30) -> None:
         assert cnot_range > 1, "Range of target qubit must be > 1."
         self.n = cnot_range
 
