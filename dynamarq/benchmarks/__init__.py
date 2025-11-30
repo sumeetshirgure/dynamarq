@@ -17,6 +17,10 @@ from .algorithms import (
         PartialQFT,
     )
 
+from .eccs import (
+        RepetitionCode,
+    )
+
 __all__ = [
         "GHZ",
         "GHZReset",
@@ -28,4 +32,5 @@ __all__ = [
         "IPE",
         "QFT",
         "PartialQFT",
+        "RepetitionCode",
         ]
