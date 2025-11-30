@@ -12,14 +12,13 @@ from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 from qiskit.quantum_info import hellinger_fidelity
 
 
-class QFT(Benchmark):
-    """Represents the dynamic Quantum Fourier transform benchmark parameterized
-    by the number of qubits n, and number of states num_states.
+class PartialQFT(Benchmark):
+    """Represents the dynamic partial Quantum Fourier transform benchmark
+    parameterized by the number of qubits n, and number of states num_states.
 
     Device performance is based on the Hellinger fidelity between
     the experimental and ideal probability distributions.
     """
-
     def __init__(self, n: int, num_states: int = 3) :
         self.n = n
         self.secret_ints = []
@@ -28,9 +27,7 @@ class QFT(Benchmark):
         for i in range (num_states):
             self.secret_ints.append(random.randint(1, 2**self.n - 1))
 
-
     def qiskit_circuits(self, mcm=True, stretch_dd=False) :
-        """Generate an n-qubit GHZ circuit"""
         circuits = []
         for s in self.secret_ints:
             qr = QuantumRegister(self.n)
@@ -44,24 +41,32 @@ class QFT(Benchmark):
                 divisor = 2 ** (i_q)
                 circuit.rz(s * pi / divisor, qr[i_q])
 
-            dynamic_inv_qft = self._dyn_inv_qft_gate(mcm, stretch_dd)
+            dynamic_inv_qft = self._partial_dyn_inv_qft_gate(int(self.n // 2), mcm, stretch_dd)
             circuit.compose(dynamic_inv_qft, qubits=qr, clbits=cr, inplace=True)
 
+            for i_qubit in list(reversed(range(self.n)))[int(self.n//2):]:
+                hidx = self.n - 1 - i_qubit
+                circuit.h(qr[hidx])
+                if hidx < self.n - 1:
+                    for j in reversed(range(i_qubit)):
+                        theta = pi / (2 ** (i_qubit - j))
+                        circuit.crz(-theta, qr[hidx], qr[self.n - 1 - j])
+
+            for i in range(int(self.n//2), self.n):
+                circuit.measure(qr[i], cr[i])
             circuits.append(circuit)
+
         return circuits
 
 
-    def _dyn_inv_qft_gate(self, mcm=True, stretch_dd=False):
+    def _partial_dyn_inv_qft_gate(self, num_qubits, mcm=True, stretch_dd=False):
         qr = QuantumRegister(self.n, name="q_dyn_inv")
         cr = ClassicalRegister(self.n, name='meas')
         qc = QuantumCircuit(qr, cr, name="dyn_inv_qft")
-
         # mirror the static inv-QFT loop order, but with mid-circuit feed-forward
-        for i_qubit in reversed(range(self.n)):
+        for i_qubit in list(reversed(range(self.n)))[:num_qubits]:
             hidx = self.n - 1 - i_qubit
-
             qc.h(qr[hidx])
-
             qc.barrier()
 
             if mcm :
@@ -84,28 +89,22 @@ class QFT(Benchmark):
                     theta = pi / (2 ** (i_qubit - j))
                     with qc.if_test((cr[hidx], 1)):
                         qc.rz(-theta, qr[self.n - 1 - j])
-
             qc.barrier()
         return qc
 
 
     def qiskit_score(self, counts_list) :
-        """Compute the Hellinger fidelity between the experimental and ideal results.
-        """
-        # Create an equal weighted distribution between the all-0 and all-1 states
+        """Compute the Hellinger fidelity between the experimental and ideal results."""
         hfs = []
         for s, counts in zip(self.secret_ints, counts_list):
             key = format(s, f"0{self.n}b")
-            # correct distribution is measuring the key 100% of the time
             correct_dist = {key: 1.0}
             hfs.append(hellinger_fidelity(counts, correct_dist))
-
         return sum(hfs) / len(hfs)
 
 
     def guppy_circuits(self) :
-        raise NotImplementedError("QFT benchmark is not available for guppy")
-
+        raise NotImplementedError("PartialQFT benchmark is not available for guppy")
 
     def guppy_score(self) :
-        raise NotImplementedError("QFT benchmark is not available for guppy")
+        raise NotImplementedError("PartialQFT benchmark is not available for guppy")

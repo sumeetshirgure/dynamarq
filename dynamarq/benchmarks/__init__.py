@@ -14,6 +14,7 @@ from .algorithms import (
         TFIM,
         IPE,
         QFT,
+        PartialQFT,
     )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
         "TFIM",
         "IPE",
         "QFT",
+        "PartialQFT",
         ]
