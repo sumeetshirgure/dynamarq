@@ -19,6 +19,7 @@ from .algorithms import (
 
 from .eccs import (
         RepetitionCode,
+        FiveQubitCode,
     )
 
 __all__ = [
@@ -33,4 +34,5 @@ __all__ = [
         "QFT",
         "PartialQFT",
         "RepetitionCode",
+        "FiveQubitCode",
         ]
