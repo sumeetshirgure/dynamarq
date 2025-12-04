@@ -1,1 +1,3 @@
-from . import benchmark, qiskit_clifford_dfe, benchmarks
+from . import benchmark, qiskit_clifford_dfe
+
+from .benchmarks import *
