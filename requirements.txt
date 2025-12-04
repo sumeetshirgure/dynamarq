@@ -1,0 +1,3 @@
+qiskit
+qiskit-ibm-runtime
+guppylang
