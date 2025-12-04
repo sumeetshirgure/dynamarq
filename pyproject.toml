@@ -1,6 +1,6 @@
 [project]
 name = "dynamarq"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
   { name="Sumeet Shirgure", email="sumeetshirgure@gmail.com" },
 ]
@@ -13,6 +13,12 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICENCSE"]
+
+dependencies=[
+  "qiskit",
+  "qiskit-ibm-runtime",
+  "guppylang"
+]
 
 [build-system]
 requires = ["setuptools"]
