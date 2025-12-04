@@ -27,6 +27,11 @@ class PartialQFT(Benchmark):
         for i in range (num_states):
             self.secret_ints.append(random.randint(1, 2**self.n - 1))
 
+
+    def name(self) :
+        return f"PartialQFT_{self.n}"
+
+
     def qiskit_circuits(self, mcm=True, stretch_dd=False) :
         circuits = []
         for s in self.secret_ints:

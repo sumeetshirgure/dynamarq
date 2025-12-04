@@ -32,6 +32,10 @@ class LongRangeCNOTSparse(Benchmark):
         self.dfe_subcircuits = clifford_dfe(self.clifford_repr, data_qubits, num_dfe_samples)
 
 
+    def name(self) :
+        return f"LongRangeCNOTSparse_{self.n}"
+
+
     def reference_circuits(self) :
         rep_data = QuantumRegister(self.n+1, 'rep_data')
         rep_anc  = QuantumRegister(self.n, 'rep_anc')

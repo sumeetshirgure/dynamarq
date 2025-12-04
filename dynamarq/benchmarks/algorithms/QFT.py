@@ -29,6 +29,10 @@ class QFT(Benchmark):
             self.secret_ints.append(random.randint(1, 2**self.n - 1))
 
 
+    def name(self) :
+        return f"QFT_{self.n}"
+
+
     def qiskit_circuits(self, mcm=True, stretch_dd=False) :
         """Generate an n-qubit GHZ circuit"""
         circuits = []

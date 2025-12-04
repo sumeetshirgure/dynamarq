@@ -28,6 +28,10 @@ class GHZReset(Benchmark) :
         assert self.n in self.choices, f"n(={num_qubits}) must be among {self.choices}"
 
 
+    def name(self) :
+        return f"GHZReset_{self.n}"
+
+
     def reference_circuits(self) :
         data = QuantumRegister(self.n, 'data')
         meas = ClassicalRegister(self.n, 'meas')

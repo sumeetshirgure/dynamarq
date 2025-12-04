@@ -42,6 +42,10 @@ class FiveQubitCode(Benchmark) :
             ]}
 
 
+    def name(self) :
+        return f"FiveQubitCode"
+
+
     def qiskit_circuits(self, mcm=True, stretch_dd=False) :
 
         circuits = []

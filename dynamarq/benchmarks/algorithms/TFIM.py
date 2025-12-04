@@ -47,6 +47,10 @@ class TFIM(Benchmark) :
         self.default_dt = 2 * pi * 1 / 30 * 0.25
 
 
+    def name(self) :
+        return f"TFIM_{self.n}_{self.steps}"
+
+
     def reference_circuits(self, h=None, J=None, dt=None) :
         if h is None : h = self.default_h
         if J is None : J = self.default_J

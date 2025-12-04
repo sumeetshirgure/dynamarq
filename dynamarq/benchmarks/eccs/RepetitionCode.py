@@ -42,6 +42,10 @@ class RepetitionCode(Benchmark) :
                               (14, (2, 4)), (4, (3, 4))]
 
 
+    def name(self) :
+        return f"RepetitionCode_{self.n}"
+
+
     def qiskit_circuits(self, mcm=True, stretch_dd=False) :
 
         circuits = []

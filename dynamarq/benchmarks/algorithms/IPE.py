@@ -16,20 +16,22 @@ from qiskit_aer import AerSimulator
 class IPE(Benchmark):
     """
     Represents the iterative phase estimation benchmark for a toy unitary :
-    (single qubit Z-rotation) with eigenstate |1> and eigenvalue exp(2*pi*i*theta).
+    (single qubit Z-rotation) with eigenstate |1> and eigenvalue exp(2*pi*i*theta/2**precision).
+    Theta must be an integer between 0 and 2**precision - 1
     Device performance is based on the Hellinger fidelity between
     the experimental and ideal probability distributions.
     """
     def __init__(self, theta: float, precision: int) -> None:
+        assert 1 <= precision <= 10, "Precision should be between 1 and 10."
+        assert 0 <= theta < 2**precision, \
+            "Theta should be an integer between 0 inclusive and 2**precision exclusive."
+
         self.theta = theta
         self.precision = precision
-        assert 0.0 <= self.theta < 1.0, "Theta should be between 0 inclusive and 1 exclusive."
-        assert 1 <= precision <= 10, "Precision should be between 1 and 10."
 
 
-    def closest_binary_expansion(self):
-        cbe = int(self.theta * (2**self.precision))
-        return cbe
+    def name(self) :
+        return f"IPE_{self.theta}_{self.precision}"
 
 
     def qiskit_circuits(self, mcm=True, stretch_dd=False) :
@@ -40,7 +42,7 @@ class IPE(Benchmark):
         m = self.precision
         for k in range(1, m+1) :
             qc.h(qreg[0])
-            theta_eff = 2*pi*self.theta * (2**(m-k))
+            theta_eff = 2*pi* (self.theta / 2**self.precision) * (2**(m-k))
             qc.cp(theta_eff, qreg[0], qreg[1])
 
             qc.barrier()
@@ -82,7 +84,7 @@ class IPE(Benchmark):
         """
         # Create an equal weighted distribution between the all-0 and all-1 states
         counts = counts_list[0]
-        fractional_part = self.closest_binary_expansion()
+        fractional_part = self.theta
         ideal_dist = {f"{bin(fractional_part)[2:]:0>{self.precision}}"[::-1] : 1}
         total_shots = sum(counts.values())
         device_dist = {bitstr: count / total_shots for bitstr, count in counts.items()}

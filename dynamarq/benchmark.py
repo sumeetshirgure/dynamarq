@@ -6,6 +6,9 @@ class Benchmark:
     Concrete subclasses must implement the abstract methods
     ``reference_circuit()``, ``qiskit_circuit()``, ``guppy_circuit()``, and ``score()``.
     """
+    @abc.abstractmethod
+    def name(self) :
+        """Returns the name of the benchmark including its parameters."""
 
     @abc.abstractmethod
     def reference_circuits(self) :
