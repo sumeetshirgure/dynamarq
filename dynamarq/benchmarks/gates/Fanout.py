@@ -94,13 +94,13 @@ class Fanout(Benchmark):
 
         if stretch_dd :
             for i in range(self.n+1) :
-                s = circuit.add_stretch(f"s_{i}")
-                circuit.delay(s, data[i])
-                circuit.x(data[i])
-                circuit.delay(s, data[i])
-                circuit.delay(s, data[i])
-                circuit.x(data[i])
-                circuit.delay(s, data[i])
+                s = qc.add_stretch(f"s_{i}")
+                qc.delay(s, data[i])
+                qc.x(data[i])
+                qc.delay(s, data[i])
+                qc.delay(s, data[i])
+                qc.x(data[i])
+                qc.delay(s, data[i])
 
         z_parity = expr.lift(c1[self.n-1-self.n%2])
         for i in range(self.n-1-self.n%2, 0, -2) :

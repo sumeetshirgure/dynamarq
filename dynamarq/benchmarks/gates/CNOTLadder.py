@@ -74,13 +74,13 @@ class CNOTLadder(Benchmark):
 
         if stretch_dd :
             for i in range(self.n) :
-                s = circuit.add_stretch(f"s_{i}")
-                circuit.delay(s, data[i])
-                circuit.x(data[i])
-                circuit.delay(s, data[i])
-                circuit.delay(s, data[i])
-                circuit.x(data[i])
-                circuit.delay(s, data[i])
+                s = qc.add_stretch(f"s_{i}")
+                qc.delay(s, data[i])
+                qc.x(data[i])
+                qc.delay(s, data[i])
+                qc.delay(s, data[i])
+                qc.x(data[i])
+                qc.delay(s, data[i])
 
         parity = expr.lift(c1[self.n-2])
         for i in range(self.n-2, -1, -1) :
