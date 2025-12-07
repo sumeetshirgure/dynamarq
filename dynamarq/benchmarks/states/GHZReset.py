@@ -88,6 +88,8 @@ class GHZReset(Benchmark) :
                 circuit.x(data[2*i])
                 circuit.delay(s, data[2*i])
 
+        circuit.barrier()
+
         for i in range(num_ancillas):
             circuit.reset(data[i * 2 + 1])
         for i in range(num_data_qubits - 1):
