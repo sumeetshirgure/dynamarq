@@ -154,7 +154,7 @@ class FiveQubitCode(Benchmark) :
             circuit.h(stab[0])
 
             # NOTE : Inserting barrier before feedforward operations.
-             circuit.barrier()
+            circuit.barrier()
 
             if mcm :
                 circuit.append(MidCircuitMeasure(), [stab[0]], [op[0]])
