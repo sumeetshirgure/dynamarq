@@ -106,6 +106,9 @@ class FiveQubitCode(Benchmark) :
                     circuit.x(data[i])
                     circuit.delay(s, data[i])
 
+            # NOTE : Inserting barrier before feedforward operations.
+            circuit.barrier()
+
             # Perform decoding and apply error correction.
 
             with circuit.if_test((syn, 8)) :

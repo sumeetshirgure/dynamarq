@@ -89,6 +89,9 @@ class RepetitionCode(Benchmark) :
                     circuit.x(data[i])
                     circuit.delay(s, data[i])
 
+            # NOTE : Insterting barrier before feed-forward just for ECC circuits.
+            circuit.barrier()
+
             # Decode error.
             match self.n :
                 case 3 : corrections = self.corrections_3
