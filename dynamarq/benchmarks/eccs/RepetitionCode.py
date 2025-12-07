@@ -64,12 +64,14 @@ class RepetitionCode(Benchmark) :
             for i in range(1, self.n) :
                 circuit.cx(data[i-1], data[i])
 
-            circuit.barrier(data)
+            circuit.barrier()
 
             # Measure syndrome.
             for i in range(self.n-1) :
                 circuit.cx(data[i], anc[i])
                 circuit.cx(data[i+1], anc[i])
+
+            circuit.barrier()
 
             if mcm :
                 for i in range(self.n-1) :
@@ -86,8 +88,6 @@ class RepetitionCode(Benchmark) :
                     circuit.delay(s, data[i])
                     circuit.x(data[i])
                     circuit.delay(s, data[i])
-
-            circuit.barrier()
 
             # Decode error.
             match self.n :

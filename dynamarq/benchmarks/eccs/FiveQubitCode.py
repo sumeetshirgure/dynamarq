@@ -88,6 +88,8 @@ class FiveQubitCode(Benchmark) :
             for i in range(4) :
                 circuit.h(anc[i])
 
+            circuit.barrier()
+
             if mcm :
                 for i in range(4) :
                     circuit.append(MidCircuitMeasure(), [anc[i]], [syn[i]])
@@ -105,7 +107,6 @@ class FiveQubitCode(Benchmark) :
                     circuit.delay(s, data[i])
 
             # Perform decoding and apply error correction.
-            circuit.barrier()
 
             with circuit.if_test((syn, 8)) :
                 circuit.x(data[0])
