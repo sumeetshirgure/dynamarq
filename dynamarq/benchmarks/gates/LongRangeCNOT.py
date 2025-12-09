@@ -136,7 +136,7 @@ class LongRangeCNOT(Benchmark):
             estimate = expectation_from_counts(meas_pauli, counts)
             fidelity_sum += estimate
         score = fidelity_sum / len(counts_list)
-        return (1+score)/2
+        return max(score, 0.0)
 
 
     def guppy_circuits(self) :

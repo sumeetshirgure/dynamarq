@@ -8,7 +8,6 @@ from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit.classical import expr
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 
-
 class CNOTLadder(Benchmark):
     """
     Represents the CNOT ladder benchmark parameterized by the number of qubits n (> 1).
@@ -118,7 +117,7 @@ class CNOTLadder(Benchmark):
             estimate = expectation_from_counts(meas_pauli, counts)
             fidelity_sum += estimate
         score = fidelity_sum / len(counts_list)
-        return (1+score)/2
+        return max(score, 0.0)
 
 
     def guppy_circuits(self) :
