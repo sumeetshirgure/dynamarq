@@ -225,7 +225,7 @@ def get_circuit_critical_path(circuit : QuantumCircuit,
 
 
 
-def compute_classical_entanglement_gates(circuit: QuantumCircuit,
+def compute_classical_entanglement_gates(circuit : QuantumCircuit,
                                          benchmark_name : str,
                                          backend_name : str,
                                          count_measure: bool = True,
@@ -319,7 +319,7 @@ def compute_circuit_critical_depth_quantum_classical(circuit : QuantumCircuit,
     return num_two_qubit_longest_path / num_two_qubits_total
 
 
-def compute_circuit_mcm_depth_ratio(circuit: QuantumCircuit,
+def compute_circuit_mcm_depth_ratio(circuit : QuantumCircuit,
                                     benchmark_name : str,
                                     backend_name : str,
                                     count_ff:bool = False,
@@ -361,11 +361,11 @@ def compute_circuit_mcm_plus_ff_depth_ratio(circuit : QuantumCircuit,
     return mcm_ff_depth / circuit_depth
 
 
-def compute_circuit_parallelism(circuit: QuantumCircuit,
-                        benchmark_name : str,
-                        backend_name : str,
-                        count_ff: bool = False
-                        ) -> float:
+def compute_circuit_parallelism(circuit : QuantumCircuit,
+                                benchmark_name : str,
+                                backend_name : str,
+                                count_ff: bool = False
+                                ) -> float:
     _, depth = compute_circuit_object_depths(
             circuit, benchmark_name, backend_name, count_ff=count_ff)
     num_gates = compute_circuit_num_gates(
@@ -374,7 +374,7 @@ def compute_circuit_parallelism(circuit: QuantumCircuit,
     return max((num_gates / depth - 1) / (circuit.num_qubits - 1), 0)
 
 
-def get_connectivity_graph(circuit: QuantumCircuit,
+def get_connectivity_graph(circuit : QuantumCircuit,
                            benchmark_name : str,
                            backend_name : str,
                            ) -> nx.Graph :
@@ -417,6 +417,23 @@ def compute_circuit_communication(circuit : QuantumCircuit,
     return degree_sum / (num_qubits * (num_qubits - 1))
 
 
+def compute_circuit_quantum_entanglement(circuit : QuantumCircuit,
+                                         benchmark_name : str,
+                                         backend_name : str,
+                                         count_measure : bool = True,
+                                         count_reset : bool = True,
+                                         count_ff : bool = False
+                                         ) -> float :
+    num_two_qubit_gates = 0
+    num_gates = compute_circuit_num_gates(
+            circuit, benchmark_name, backend_name,
+            count_measure, count_reset, count_ff)
+    for instruction in circuit :
+        if instruction.is_standard_gate() and instruction.operation.num_qubits == 2 :
+            num_two_qubit_gates += 1
+    if num_gates == 0 : return 0
+    return num_two_qubit_gates / num_gates
+
 
 def get_metric_names() :
     return [
@@ -435,6 +452,9 @@ def get_metric_names() :
             'parallelism',
             'parallelism_ff',
             'communication',
+            'quantum_entanglement',
+            'quantum_entanglement_measure_reset',
+            'quantum_entanglement_measure_reset_ff',
             ]
 
 
@@ -492,5 +512,16 @@ def get_circuit_metrics(circuit : QuantumCircuit,
 
     metrics['communication'] = compute_circuit_communication(
             circuit, benchmark_name, backend_name)
+
+    metrics['quantum_entanglement'] = compute_circuit_quantum_entanglement(
+            circuit, benchmark_name, backend_name,
+            count_measure=False, count_reset=False)
+
+    metrics['quantum_entanglement_measure_reset'] = compute_circuit_quantum_entanglement(
+            circuit, benchmark_name, backend_name)
+
+    metrics['quantum_entanglement_measure_reset_ff'] = compute_circuit_quantum_entanglement(
+            circuit, benchmark_name, backend_name, count_ff=True)
+
 
     return metrics
