@@ -318,7 +318,7 @@ def compute_circuit_critical_depth_quantum_classical(circuit : QuantumCircuit,
     return num_two_qubit_longest_path / num_two_qubits_total
 
 
-def compute_mcm_depth_ratio(circuit: QuantumCircuit,
+def compute_circuit_mcm_depth_ratio(circuit: QuantumCircuit,
                             benchmark_name : str,
                             backend_name : str,
                             count_ff:bool = False,
@@ -338,6 +338,19 @@ def compute_mcm_depth_ratio(circuit: QuantumCircuit,
     return mid_measurement_depth / circuit_depth
 
 
+def compute_circuit_parallelism(circuit: QuantumCircuit,
+                        benchmark_name : str,
+                        backend_name : str,
+                        count_ff: bool = False
+                        ) -> float:
+    _, depth = compute_circuit_object_depths(
+            circuit, benchmark_name, backend_name, count_ff=count_ff)
+    num_gates = compute_circuit_num_gates(
+            circuit, benchmark_name, backend_name, count_ff=count_ff)
+    if circuit.num_qubits <= 1 : return 0
+    return max((num_gates / depth - 1) / (circuit.num_qubits - 1), 0)
+
+
 def get_metric_names() :
     return [
             'depth',
@@ -350,7 +363,9 @@ def get_metric_names() :
             'critical_path_quantum',
             'critical_path_quantum_classical',
             'mcm_depth_ratio',
-            'mcm_depth_ratio_ff'
+            'mcm_depth_ratio_ff',
+            'parallelism',
+            'parallelism_ff',
             ]
 
 
@@ -391,10 +406,17 @@ def get_circuit_metrics(circuit : QuantumCircuit,
             compute_circuit_critical_depth_quantum_classical(
                     circuit, benchmark_name, backend_name)
 
-    metrics['mcm_depth_ratio'] = compute_mcm_depth_ratio(
+    metrics['mcm_depth_ratio'] = compute_circuit_mcm_depth_ratio(
             circuit, benchmark_name, backend_name)
 
-    metrics['mcm_depth_ratio_ff'] = compute_mcm_depth_ratio(
+    metrics['mcm_depth_ratio_ff'] = compute_circuit_mcm_depth_ratio(
             circuit, benchmark_name, backend_name, count_ff=True)
+
+    metrics['parallelism'] = compute_circuit_parallelism(
+            circuit, benchmark_name, backend_name)
+
+    metrics['parallelism_ff'] = compute_circuit_parallelism(
+            circuit, benchmark_name, backend_name, count_ff=True)
+
 
     return metrics
