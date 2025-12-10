@@ -5,9 +5,14 @@ from qiskit import transpile, QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit import CircuitInstruction, Qubit
 
 from qiskit.dagcircuit import DAGCircuit, DAGOpNode
+from qiskit.converters import circuit_to_dag, dag_to_circuit
 
 
-def get_circuit_branch_probability(instruction, benchmark_name, backend_name) :
+def get_instruction_branch_probability(instruction, benchmark_name, backend_name) :
+    return 0.5
+
+
+def get_node_branch_probability(node, benchmark_name, backend_name) :
     return 0.5
 
 
@@ -15,7 +20,7 @@ def compute_circuit_object_depths(circuit : QuantumCircuit,
                                   benchmark_name : str,
                                   backend_name : str,
                                   count_ff: bool = False,
-                                  ) -> float :
+                                  ) -> (dict, float) :
 
     if circuit is None : return {}, 0.0
 
@@ -32,7 +37,7 @@ def compute_circuit_object_depths(circuit : QuantumCircuit,
         if instruction.is_control_flow() and instruction.name == 'if_else' :
             if count_ff : new_depth += 1
 
-            branch_probability = get_circuit_branch_probability(
+            branch_probability = get_instruction_branch_probability(
                     instruction, benchmark_name, backend_name)
 
             _, if_subcircuit_total_depth = compute_circuit_object_depths(
@@ -56,10 +61,10 @@ def compute_circuit_object_depths(circuit : QuantumCircuit,
 
 
 def compute_circuit_total_active_time(circuit : QuantumCircuit,
-                                        benchmark_name : str,
-                                        backend_name : str,
-                                        count_ff: bool = False,
-                                        ) -> float :
+                                      benchmark_name : str,
+                                      backend_name : str,
+                                      count_ff: bool = False,
+                                      ) -> float :
 
     if circuit is None : return 0.0
 
@@ -72,7 +77,7 @@ def compute_circuit_total_active_time(circuit : QuantumCircuit,
         if instruction.is_control_flow() and instruction.name == 'if_else' :
             if count_ff : added_activity += 1
 
-            branch_probability = get_circuit_branch_probability(
+            branch_probability = get_instruction_branch_probability(
                     instruction, benchmark_name, backend_name)
 
             if_subcircuit_total_activity = compute_circuit_total_active_time(
@@ -96,13 +101,272 @@ def compute_circuit_liveness(circuit : QuantumCircuit,
                              backend_name : str,
                              count_ff: bool = False,
                              ) -> float :
+
     circuit_qubit_depths, _ = compute_circuit_object_depths(
             circuit, benchmark_name, backend_name, count_ff=count_ff)
     total_gate_activity = compute_circuit_total_active_time(
             circuit, benchmark_name, backend_name, count_ff=count_ff)
+
     total_liveness = 0.0
     for obj, depth in circuit_qubit_depths.items() :
         if isinstance(obj, Qubit) :
             total_liveness += depth
+
     if total_liveness == 0.0 : return 0.0
     return total_gate_activity / total_liveness
+
+
+def compute_circuit_num_gates(circuit : QuantumCircuit,
+                              benchmark_name : str,
+                              backend_name : str,
+                              count_measure: bool = True,
+                              count_reset: bool = True,
+                              count_ff : bool = False,
+                              ) -> float :
+
+    if circuit is None : return 0.0
+
+    num_gates = 0.0
+
+    for instruction in circuit :
+        if instruction.name in ['barrier'] : continue
+
+        if instruction.name in ['measure', 'measure_2'] and count_measure :
+            num_gates += 1.0
+            continue
+
+        if instruction.name in ['reset'] and count_reset :
+            num_gates += 1.0
+            continue
+
+        added_num_gates = 0.0
+        if instruction.is_control_flow() and instruction.name == 'if_else' :
+            if count_ff : added_num_gates += 1
+
+            branch_probability = get_instruction_branch_probability(
+                    instruction, benchmark_name, backend_name)
+
+            if_subcircuit_total_gates = compute_circuit_num_gates(
+                    instruction.params[0], benchmark_name, backend_name,
+                    count_measure, count_reset, count_ff)
+            else_subcircuit_total_gates = compute_circuit_num_gates(
+                    instruction.params[1], benchmark_name, backend_name,
+                    count_measure, count_reset, count_ff)
+
+            added_num_gates += branch_probability * if_subcircuit_total_gates + \
+                    (1 - branch_probability) * else_subcircuit_total_gates
+
+        elif instruction.is_standard_gate() :
+            added_num_gates += 1.0
+
+        num_gates += added_num_gates
+
+    return num_gates
+
+
+def get_circuit_critical_path(circuit : QuantumCircuit,
+                              benchmark_name : str,
+                              backend_name : str,
+                              count_ff : bool = False,
+                              ) -> (list, float) :
+
+    if circuit is None :
+        return [], 0.0
+
+    dag = circuit_to_dag(circuit)
+    dag.remove_all_ops_named("barrier")
+    topo_nodes = list(dag.topological_op_nodes())
+
+    longest_distance = {node: 0 for node in topo_nodes}
+    predecessor = {node: None for node in topo_nodes}
+
+    for node in topo_nodes :
+        for succ in dag.successors(node) :
+            if not isinstance(succ, DAGOpNode) : continue
+
+            new_distance = longest_distance[node]
+            if succ.is_control_flow() and succ.name == 'if_else' :
+                if count_ff : new_distance += 1
+
+                branch_probability = get_node_branch_probability(
+                        succ, benchmark_name, backend_name)
+
+                _, if_subcircuit_critical_depth = get_circuit_critical_path(
+                        succ.params[0], benchmark_name, backend_name, count_ff)
+                _, else_subcircuit_critical_depth = get_circuit_critical_path(
+                        succ.params[1], benchmark_name, backend_name, count_ff)
+
+                added_distance = branch_probability * if_subcircuit_critical_depth + \
+                        (1 - branch_probability) * else_subcircuit_critical_depth
+
+                new_distance += added_distance
+            
+            elif succ.is_standard_gate() or succ.name in ['measure', 'measure_2', 'reset'] :
+                new_distance += 1
+
+            if new_distance > longest_distance[succ]:
+                longest_distance[succ] = new_distance
+                predecessor[succ] = node
+
+    if not longest_distance :
+        return [], 0
+
+    end_node = max(longest_distance, key=longest_distance.get)
+    critical_depth = longest_distance[end_node]
+
+    critical_path = []
+    while end_node is not None:
+        critical_path.append(end_node)
+        end_node = predecessor[end_node]
+    critical_path.reverse()
+
+    return critical_path, critical_depth
+
+
+
+def compute_classical_entanglement_gates(circuit: QuantumCircuit,
+                                         benchmark_name : str,
+                                         backend_name : str,
+                                         count_measure: bool = True,
+                                         count_reset: bool = True,
+                                         count_ff: bool = False,
+                                         ) -> float:
+    num_branch_gates = 0.0
+
+    for instruction in circuit :
+        if instruction.is_control_flow() and instruction.name == 'if_else' :
+
+            branch_probability = get_instruction_branch_probability(
+                    instruction, benchmark_name, backend_name)
+
+            if_subcircuit_total_gates = compute_circuit_num_gates(
+                    instruction.params[0], benchmark_name, backend_name,
+                    count_measure, count_reset, count_ff)
+            else_subcircuit_total_gates = compute_circuit_num_gates(
+                    instruction.params[1], benchmark_name, backend_name,
+                    count_measure, count_reset, count_ff)
+
+            num_branch_gates += branch_probability * if_subcircuit_total_gates + \
+                    (1 - branch_probability) * else_subcircuit_total_gates 
+
+    return num_branch_gates
+
+
+def compute_circuit_critical_depth_quantum(circuit : QuantumCircuit,
+                                           benchmark_name : str,
+                                           backend_name : str,
+                                           ) -> float :
+    critical_path, _ = get_circuit_critical_path(
+            circuit, benchmark_name, backend_name, count_ff=False)
+
+    num_two_qubit_longest_path = 0
+    for node in critical_path :
+        if node.op.num_qubits > 1 :
+            num_two_qubit_longest_path += 1
+
+    num_two_qubits_total = 0
+    for instruction in circuit._data:
+        if instruction.operation.num_qubits > 1:
+            num_two_qubits_total += 1
+
+    if num_two_qubits_total == 0:
+        return 0
+    return num_two_qubit_longest_path / num_two_qubits_total
+
+
+def compute_circuit_critical_depth_quantum_classical(circuit : QuantumCircuit,
+                                                     benchmark_name : str,
+                                                     backend_name : str,
+                                                     count_measure : bool = True,
+                                                     count_reset : bool = True,
+                                                     count_ff : bool = False
+                                                     ) -> float :
+    critical_path, _ = get_circuit_critical_path(
+            circuit, benchmark_name, backend_name, count_ff=count_ff)
+
+    num_two_qubit_longest_path = 0
+    for node in critical_path :
+
+        if node.op.num_qubits > 1:
+            num_two_qubit_longest_path += 1
+
+        elif node.op.name == 'if_else' :
+            branch_probability = get_node_branch_probability(
+                    node, benchmark_name, backend_name)
+
+            if_subcircuit_total_gates = compute_circuit_num_gates(
+                    node.params[0], benchmark_name, backend_name,
+                    count_measure, count_reset, count_ff)
+            else_subcircuit_total_gates = compute_circuit_num_gates(
+                    node.params[1], benchmark_name, backend_name,
+                    count_measure, count_reset, count_ff)
+
+            num_two_qubit_longest_path += branch_probability * if_subcircuit_total_gates + \
+                    (1 - branch_probability) * else_subcircuit_total_gates
+
+    num_two_qubits_total = 0
+    for instruction in circuit :
+        if instruction.operation.num_qubits > 1:
+            num_two_qubits_total += 1
+
+    num_two_qubits_total += compute_classical_entanglement_gates(
+            circuit, benchmark_name, backend_name,
+            count_measure, count_reset, count_ff)
+
+    if num_two_qubits_total == 0:
+        return 0
+    return num_two_qubit_longest_path / num_two_qubits_total
+
+
+def get_metric_names() :
+    return [
+            'depth',
+            'depth_ff',
+            'liveness',
+            'liveness_ff',
+            'num_gates',
+            'num_gates_measure_reset',
+            'num_gates_measure_reset_ff',
+            'critical_path_quantum',
+            'critical_path_quantum_classical',
+            ]
+
+
+def get_circuit_metrics(circuit : QuantumCircuit,
+                        benchmark_name : str,
+                        backend_name : str
+                        ) -> dict :
+    metrics = dict()
+
+    metrics['depth'] = compute_circuit_object_depths(
+            circuit, benchmark_name, backend_name, count_ff=False)[1]
+
+    metrics['depth_ff'] = compute_circuit_object_depths(
+            circuit, benchmark_name, backend_name, count_ff=True)[1]
+
+    metrics['liveness'] = compute_circuit_liveness(
+            circuit, benchmark_name, backend_name, count_ff=False)
+
+    metrics['liveness_ff'] = compute_circuit_liveness(
+            circuit, benchmark_name, backend_name, count_ff=True)
+
+    metrics['num_gates'] = compute_circuit_num_gates(
+            circuit, benchmark_name, backend_name,
+            count_measure=False, count_reset=False, count_ff=False)
+
+    metrics['num_gates_measure_reset'] = compute_circuit_num_gates(
+            circuit, benchmark_name, backend_name,
+            count_measure=True, count_reset=True, count_ff=False)
+
+    metrics['num_gates_measure_reset_ff'] = compute_circuit_num_gates(
+            circuit, benchmark_name, backend_name,
+            count_measure=True, count_reset=True, count_ff=True)
+
+    metrics['critical_path_quantum'] = compute_circuit_critical_depth_quantum(
+            circuit, benchmark_name, backend_name)
+
+    metrics['critical_path_quantum_classical'] = \
+            compute_circuit_critical_depth_quantum_classical(
+                    circuit, benchmark_name, backend_name)
+
+    return metrics
