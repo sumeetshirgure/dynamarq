@@ -320,10 +320,10 @@ def compute_circuit_critical_depth_quantum_classical(circuit : QuantumCircuit,
 
 
 def compute_circuit_mcm_depth_ratio(circuit: QuantumCircuit,
-                            benchmark_name : str,
-                            backend_name : str,
-                            count_ff:bool = False,
-                            ) -> float :
+                                    benchmark_name : str,
+                                    backend_name : str,
+                                    count_ff:bool = False,
+                                    ) -> float :
     dag = circuit_to_dag(circuit)
     mid_measurement_depth = 0
     for layer in dag.layers():
@@ -337,6 +337,28 @@ def compute_circuit_mcm_depth_ratio(circuit: QuantumCircuit,
     if circuit_depth == 0 :
         return 0
     return mid_measurement_depth / circuit_depth
+
+
+def compute_circuit_mcm_plus_ff_depth_ratio(circuit : QuantumCircuit,
+                                            benchmark_name : str,
+                                            backend_name : str
+                                            ) -> float :
+    dag = circuit_to_dag(circuit)
+    mcm_ff_depth = 0
+    for layer in dag.layers():
+        layer_ops = layer['graph'].op_nodes()
+        for node in layer_ops:
+            if node.name == 'measure_2' :
+                mcm_ff_depth += 1
+                break
+            elif node.is_control_flow() and node.op.name == 'if_else' :
+                mcm_ff_depth += 1
+                break
+    _, circuit_depth = compute_circuit_object_depths(
+            circuit, benchmark_name, backend_name, count_ff=True)
+    if circuit_depth == 0 :
+        return 0
+    return mcm_ff_depth / circuit_depth
 
 
 def compute_circuit_parallelism(circuit: QuantumCircuit,
@@ -409,6 +431,7 @@ def get_metric_names() :
             'critical_path_quantum_classical',
             'mcm_depth_ratio',
             'mcm_depth_ratio_ff',
+            'mcm_plus_ff_depth_ratio',
             'parallelism',
             'parallelism_ff',
             'communication',
@@ -457,6 +480,9 @@ def get_circuit_metrics(circuit : QuantumCircuit,
 
     metrics['mcm_depth_ratio_ff'] = compute_circuit_mcm_depth_ratio(
             circuit, benchmark_name, backend_name, count_ff=True)
+
+    metrics['mcm_plus_ff_depth_ratio'] = compute_circuit_mcm_plus_ff_depth_ratio(
+            circuit, benchmark_name, backend_name)
 
     metrics['parallelism'] = compute_circuit_parallelism(
             circuit, benchmark_name, backend_name)
