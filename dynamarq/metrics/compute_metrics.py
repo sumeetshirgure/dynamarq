@@ -318,6 +318,26 @@ def compute_circuit_critical_depth_quantum_classical(circuit : QuantumCircuit,
     return num_two_qubit_longest_path / num_two_qubits_total
 
 
+def compute_mcm_depth_ratio(circuit: QuantumCircuit,
+                            benchmark_name : str,
+                            backend_name : str,
+                            count_ff:bool = False,
+                            ) -> float :
+    dag = circuit_to_dag(circuit)
+    mid_measurement_depth = 0
+    for layer in dag.layers():
+        layer_ops = layer['graph'].op_nodes()
+        for node in layer_ops:
+            if node.name == 'measure_2' :
+                mid_measurement_depth += 1
+                break
+    _, circuit_depth = compute_circuit_object_depths(
+            circuit, benchmark_name, backend_name, count_ff=count_ff)
+    if circuit_depth == 0 :
+        return 0
+    return mid_measurement_depth / circuit_depth
+
+
 def get_metric_names() :
     return [
             'depth',
@@ -329,6 +349,8 @@ def get_metric_names() :
             'num_gates_measure_reset_ff',
             'critical_path_quantum',
             'critical_path_quantum_classical',
+            'mcm_depth_ratio',
+            'mcm_depth_ratio_ff'
             ]
 
 
@@ -368,5 +390,11 @@ def get_circuit_metrics(circuit : QuantumCircuit,
     metrics['critical_path_quantum_classical'] = \
             compute_circuit_critical_depth_quantum_classical(
                     circuit, benchmark_name, backend_name)
+
+    metrics['mcm_depth_ratio'] = compute_mcm_depth_ratio(
+            circuit, benchmark_name, backend_name)
+
+    metrics['mcm_depth_ratio_ff'] = compute_mcm_depth_ratio(
+            circuit, benchmark_name, backend_name, count_ff=True)
 
     return metrics
