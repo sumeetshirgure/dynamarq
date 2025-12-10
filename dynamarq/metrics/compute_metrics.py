@@ -1,5 +1,6 @@
 from ..benchmark import Benchmark
 
+import networkx as nx
 
 from qiskit import transpile, QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit import CircuitInstruction, Qubit
@@ -351,6 +352,50 @@ def compute_circuit_parallelism(circuit: QuantumCircuit,
     return max((num_gates / depth - 1) / (circuit.num_qubits - 1), 0)
 
 
+def get_connectivity_graph(circuit: QuantumCircuit,
+                           benchmark_name : str,
+                           backend_name : str,
+                           ) -> nx.Graph :
+    dag = circuit_to_dag(circuit)
+    dag.remove_all_ops_named('barrier')
+    graph = nx.Graph()
+    clbit_map = dict()
+    graph.add_nodes_from(dag.qubits)
+    for node in dag.topological_op_nodes() :
+        if node.op.name in ['measure', 'measure_2'] :
+            clbit_map[node.cargs[0]] = node.qargs[0]
+        elif node.is_control_flow() and node.op.name == 'if_else' :
+            branch_probability = get_node_branch_probability(
+                    node, benchmark_name, backend_name)
+            for q0 in node.qargs :
+                for clbit in node.cargs :
+                    if clbit not in clbit_map : continue
+                    q1 = clbit_map[clbit]
+                    edge = (q0, q1)
+                    if edge not in graph.edges() :
+                        graph.add_edge(edge[0], edge[1], weight=branch_probability)
+        elif node.is_standard_gate() :
+            if node.op.num_qubits == 2 :
+                q0, q1 = node.qargs
+                edge = (q0, q1)
+                if edge not in graph.edges() :
+                    graph.add_edge(edge[0], edge[1], weight=1.0)
+    return graph
+
+
+def compute_circuit_communication(circuit : QuantumCircuit,
+                                  benchmark_name : str,
+                                  backend_name : str,
+                                  ) -> float:
+    num_qubits = circuit.num_qubits
+    graph = get_connectivity_graph(circuit, benchmark_name, backend_name)
+    degree_sum = sum([graph.degree(n, weight='weight') for n in graph.nodes()])
+    if num_qubits <= 1 :
+        return 0
+    return degree_sum / (num_qubits * (num_qubits - 1))
+
+
+
 def get_metric_names() :
     return [
             'depth',
@@ -366,6 +411,7 @@ def get_metric_names() :
             'mcm_depth_ratio_ff',
             'parallelism',
             'parallelism_ff',
+            'communication',
             ]
 
 
@@ -418,5 +464,7 @@ def get_circuit_metrics(circuit : QuantumCircuit,
     metrics['parallelism_ff'] = compute_circuit_parallelism(
             circuit, benchmark_name, backend_name, count_ff=True)
 
+    metrics['communication'] = compute_circuit_communication(
+            circuit, benchmark_name, backend_name)
 
     return metrics

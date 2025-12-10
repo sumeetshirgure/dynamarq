@@ -17,7 +17,8 @@ license-files = ["LICENCSE"]
 dependencies=[
   "qiskit",
   "qiskit-ibm-runtime",
-  "guppylang"
+  "guppylang",
+  "networkx",
 ]
 
 [build-system]
