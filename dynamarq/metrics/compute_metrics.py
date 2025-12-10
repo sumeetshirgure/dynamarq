@@ -435,6 +435,25 @@ def compute_circuit_quantum_entanglement(circuit : QuantumCircuit,
     return num_two_qubit_gates / num_gates
 
 
+def compute_circuit_quantum_classical_entanglement(circuit : QuantumCircuit,
+                                                   benchmark_name : str,
+                                                   backend_name : str,
+                                                   count_measure : bool = True,
+                                                   count_reset : bool = True,
+                                                   count_ff : bool = False
+                                                   ) -> float :
+    quantum_entanglement = compute_circuit_quantum_entanglement(
+            circuit, benchmark_name, backend_name,
+            count_measure, count_reset, count_ff)
+    num_gates = compute_circuit_num_gates(
+            circuit, benchmark_name, backend_name,
+            count_measure, count_reset, count_ff)
+    classical_entanglement_gates = compute_classical_entanglement_gates(
+            circuit, benchmark_name, backend_name,
+            count_measure, count_reset, count_ff)
+    return quantum_entanglement + classical_entanglement_gates / num_gates
+
+
 def get_metric_names() :
     return [
             'depth',
@@ -455,6 +474,9 @@ def get_metric_names() :
             'quantum_entanglement',
             'quantum_entanglement_measure_reset',
             'quantum_entanglement_measure_reset_ff',
+            'quantum_classical_entanglement',
+            'quantum_classical_entanglement_measure_reset',
+            'quantum_classical_entanglement_measure_reset_ff',
             ]
 
 
@@ -523,5 +545,15 @@ def get_circuit_metrics(circuit : QuantumCircuit,
     metrics['quantum_entanglement_measure_reset_ff'] = compute_circuit_quantum_entanglement(
             circuit, benchmark_name, backend_name, count_ff=True)
 
+    metrics['quantum_classical_entanglement'] = compute_circuit_quantum_classical_entanglement(
+            circuit, benchmark_name, backend_name,
+            count_measure=False, count_reset=False)
+
+    metrics['quantum_classical_entanglement_measure_reset'] = \
+            compute_circuit_quantum_classical_entanglement(circuit, benchmark_name, backend_name)
+
+    metrics['quantum_classical_entanglement_measure_reset_ff'] = \
+            compute_circuit_quantum_classical_entanglement(
+                    circuit, benchmark_name, backend_name, count_ff=True)
 
     return metrics
