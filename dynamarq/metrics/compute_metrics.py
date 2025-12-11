@@ -10,10 +10,46 @@ from qiskit.converters import circuit_to_dag, dag_to_circuit
 
 
 def get_instruction_branch_probability(instruction, benchmark_name, backend_name) :
+    assert backend_name in ['ibm_kingston', 'ibm_pittsburgh']
+
+    # These values are obtained from IBM Quantum platform
+    if backend_name == 'ibm_kingston'   : p, m = 2.01e-3, 8.911e-3
+    if backend_name == 'ibm_pittsburgh' : p, m = 1.61e-3, 3.662e-3
+
+    if benchmark_name == 'RepetitionCode_3' :
+        bp = 2 * p * (1-p)**3 * (1-m) ** 2 + (1-p)**4 * m * (1-m)
+        return bp
+
+    if benchmark_name == 'RepetitionCode_5' :
+        bp = 2 * p * (1-p)**7 * (1-m) ** 4 + (1-p) ** 8 * m * (1-m)**3
+        return bp
+
+    if benchmark_name == 'FiveQubitCode' :
+        if instruction.clbits[0]._register.name == 'syn' :
+            return 1.0 / 16.0
+
     return 0.5
 
 
 def get_node_branch_probability(node, benchmark_name, backend_name) :
+    assert backend_name in ['ibm_kingston', 'ibm_pittsburgh']
+
+    # These values are obtained from IBM Quantum platform
+    if backend_name == 'ibm_kingston'   : p, m = 2.01e-3, 8.911e-3
+    if backend_name == 'ibm_pittsburgh' : p, m = 1.61e-3, 3.662e-3
+
+    if benchmark_name == 'RepetitionCode_3' :
+        bp = 2 * p * (1-p)**3 * (1-m) ** 2 + (1-p)**4 * m * (1-m)
+        return bp
+
+    if benchmark_name == 'RepetitionCode_5' :
+        bp = 2 * p * (1-p)**7 * (1-m) ** 4 + (1-p) ** 8 * m * (1-m)**3
+        return bp
+
+    if benchmark_name == 'FiveQubitCode' :
+        if node.cargs[0]._register.name == 'syn' :
+            return 1.0 / 16.0
+
     return 0.5
 
 
