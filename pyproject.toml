@@ -12,7 +12,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 license = "MIT"
-license-files = ["LICENCSE"]
+license-files = ["LICENSE"]
 
 dependencies=[
   "qiskit",
