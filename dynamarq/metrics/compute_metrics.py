@@ -145,14 +145,17 @@ class QiskitMetrics() :
         p, m = self.median_2q_error, self.median_m2_error
 
         if self.benchmark.name() == 'RepetitionCode_3' :
+            # Compute most significant bit flip error rate on ancillas.
             bp = 2 * p * (1-p)**3 * (1-m) ** 2 + (1-p)**4 * m * (1-m)
             return bp
 
         if self.benchmark.name() == 'RepetitionCode_5' :
+            # Compute most significant bit flip error rate on ancillas.
             bp = 2 * p * (1-p)**7 * (1-m) ** 4 + (1-p) ** 8 * m * (1-m)**3
             return bp
 
         if self.benchmark.name() == 'FiveQubitCode' :
+            # Branch probability calculation based on symmetry.
             if instruction.clbits[0]._register.name == 'syn' :
                 return 1.0 / 16.0
 
@@ -163,14 +166,17 @@ class QiskitMetrics() :
         p, m = self.median_2q_error, self.median_m2_error
 
         if self.benchmark.name() == 'RepetitionCode_3' :
+            # Compute most significant bit flip error rate on ancillas.
             bp = 2 * p * (1-p)**3 * (1-m) ** 2 + (1-p)**4 * m * (1-m)
             return bp
 
         if self.benchmark.name() == 'RepetitionCode_5' :
+            # Compute most significant bit flip error rate on ancillas.
             bp = 2 * p * (1-p)**7 * (1-m) ** 4 + (1-p) ** 8 * m * (1-m)**3
             return bp
 
         if self.benchmark.name() == 'FiveQubitCode' :
+            # Branch probability calculation based on symmetry.
             if node.cargs[0]._register.name == 'syn' :
                 return 1.0 / 16.0
 
