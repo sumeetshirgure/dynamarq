@@ -21,8 +21,7 @@ class RepetitionCode(Benchmark) :
     This benchmark evaluates how well the hardware preserves |1> and |+> states
     and performs one round of syndrome measurement and correction.
 
-    We evaluate the Hellinger fidelity between the obtained distribution and the
-    ideal distribution (depending on the initial state) as the score for this benchmark.
+    We evaluate the logical error rate on hardware as the score for this benchmark.
     Since the basic repetition code doesn't detect phase errors, it's a bit inaccurate
     when considering a generic error model like depolarizing noise.
     """
@@ -32,7 +31,7 @@ class RepetitionCode(Benchmark) :
         self.choices = [3, 5]
         self.init_states = ['1', '+']
 
-        assert self.n in self.choices, f"Only {self.choices} are supported"
+        assert self.n in self.choices, f"Only n = {self.choices} are supported"
 
         self.corrections_3 = [ (1, (0,)), (2, (2,)), (3, (1,)) ]
         self.corrections_5 = [(1, (0,)), (3, (1,)), (6, (2,)), (12, (3,)),
@@ -89,7 +88,7 @@ class RepetitionCode(Benchmark) :
                     circuit.x(data[i])
                     circuit.delay(s, data[i])
 
-            # NOTE : Insterting barrier before feed-forward just for ECC circuits.
+            # NOTE : Inserting barrier before feed-forward just for ECC circuits.
             circuit.barrier()
 
             # Decode error.
@@ -104,6 +103,13 @@ class RepetitionCode(Benchmark) :
                         circuit.x(data[qubit_index])
             circuit.barrier()
 
+            # Unprepare initial state.
+            if init_state == '+' :
+                # Unencode from repetition code.
+                for i in range(self.n-1, 0, -1) :
+                    circuit.cx(data[i-1], data[i])
+                circuit.h(data[0])
+
             # Final readout.
             circuit.measure(data, meas)
 
@@ -113,13 +119,9 @@ class RepetitionCode(Benchmark) :
 
 
     def qiskit_score(self, counts_list) :
-        ket1 = {b * self.n: 1 for b in ["1"]}
-        plus = {b * self.n: 0.5 for b in ["0", "1"]}
-
-        ideal_dists = [ket1, plus]
 
         fidelity_sum = 0.0
-        for ideal_dist, counts in zip(ideal_dists, counts_list) :
+        for init_state, counts in zip(self.init_states, counts_list) :
             total_shots = sum(counts.values())
 
             device_hist = dict()
@@ -129,8 +131,11 @@ class RepetitionCode(Benchmark) :
                     device_hist[data_qubits] = 0
                 device_hist[data_qubits] += count
             device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
-            
-            fidelity_sum += hellinger_fidelity(ideal_dist, device_dist)
+
+            if init_state == '1' :
+                fidelity_sum += device_dist['1' * self.n]
+            if init_state == '+' :
+                fidelity_sum += device_dist['0' * self.n]
 
         return fidelity_sum / len(counts_list)
 
@@ -191,6 +196,10 @@ class RepetitionCode(Benchmark) :
             if syndrome_value == 1 : x(data[0])
             if syndrome_value == 2 : x(data[2])
             if syndrome_value == 3 : x(data[1])
+            # Unencode from repetition code
+            cx(data[1], data[2])
+            cx(data[0], data[1])
+            h(data[0])
             # Final readout
             meas = measure_array(data)
             for v in meas : result('meas', v)
@@ -294,6 +303,12 @@ class RepetitionCode(Benchmark) :
             if syndrome_value == 14 : x(data[2]); x(data[4])
             if syndrome_value == 4  : x(data[3]); x(data[4])
             # Final readout
+            # Unencode from repetition code.
+            cx(data[3], data[4])
+            cx(data[2], data[3])
+            cx(data[1], data[2])
+            cx(data[0], data[1])
+            h(data[0])
             meas = measure_array(data)
             for v in meas : result('meas', v)
 
@@ -305,14 +320,9 @@ class RepetitionCode(Benchmark) :
 
 
     def guppy_score(self, results_list) :
-        ket1 = {b * self.n: 1 for b in ["1"]}
-        plus = {b * self.n: 0.5 for b in ["0", "1"]}
-
-        ideal_dists = [ket1, plus]
 
         fidelity_sum = 0.0
-
-        for ideal_dist, results in zip(ideal_dists, results_list) :
+        for init_state, results in zip(self.init_states, results_list) :
             collated_counts = results.collated_counts()
             total_shots = sum(collated_counts.values())
 
@@ -327,6 +337,9 @@ class RepetitionCode(Benchmark) :
 
             device_dist = {bitstring: count/total_shots for bitstring, count in device_hist.items()}
 
-            fidelity_sum += hellinger_fidelity(ideal_dist, device_dist)
+            if init_state == '1' :
+                fidelity_sum += device_dist['1' * self.n]
+            if init_state == '+' :
+                fidelity_sum += device_dist['0' * self.n]
 
         return fidelity_sum / len(results_list)
