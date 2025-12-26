@@ -13,7 +13,7 @@ from qiskit_aer import AerSimulator
 import guppylang
 from guppylang import guppy
 
-from guppylang.std.builtins import owned, array, result, panic
+from guppylang.std.builtins import owned, array, result, comptime
 from guppylang.std.quantum import qubit, measure, measure_array, h, x, z, cx, rx, rz, discard_array
 from guppylang.std.angles import angle
 
@@ -191,108 +191,15 @@ class TFIM(Benchmark) :
             for v in meas : result('meas', v)
 
             return anc
-            
 
-        @guppy
-        def circuit_3_2() -> None :
-            data = array(qubit() for _ in range(3))
-            anc  = array(qubit() for _ in range(2))
-            anc_final = base_circuit(data, anc, 2)
+        @guppy.comptime
+        def guppy_circuit() -> None :
+            data = array(qubit() for _ in range(self.n))
+            anc  = array(qubit() for _ in range(self.n-1))
+            anc_final = base_circuit(data, anc, self.steps)
             discard_array(anc_final)
 
-        @guppy
-        def circuit_3_5() -> None :
-            data = array(qubit() for _ in range(3))
-            anc  = array(qubit() for _ in range(2))
-            anc_final = base_circuit(data, anc, 5)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_3_20() -> None :
-            data = array(qubit() for _ in range(3))
-            anc  = array(qubit() for _ in range(2))
-            anc_final = base_circuit(data, anc, 20)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_5_2() -> None :
-            data = array(qubit() for _ in range(5))
-            anc  = array(qubit() for _ in range(4))
-            anc_final = base_circuit(data, anc, 2)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_5_5() -> None :
-            data = array(qubit() for _ in range(5))
-            anc  = array(qubit() for _ in range(4))
-            anc_final = base_circuit(data, anc, 5)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_5_20() -> None :
-            data = array(qubit() for _ in range(5))
-            anc  = array(qubit() for _ in range(4))
-            anc_final = base_circuit(data, anc, 20)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_10_2() -> None :
-            data = array(qubit() for _ in range(10))
-            anc  = array(qubit() for _ in range(9))
-            anc_final = base_circuit(data, anc, 2)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_10_5() -> None :
-            data = array(qubit() for _ in range(10))
-            anc  = array(qubit() for _ in range(9))
-            anc_final = base_circuit(data, anc, 5)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_10_20() -> None :
-            data = array(qubit() for _ in range(10))
-            anc  = array(qubit() for _ in range(9))
-            anc_final = base_circuit(data, anc, 20)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_30_2() -> None :
-            data = array(qubit() for _ in range(30))
-            anc  = array(qubit() for _ in range(29))
-            anc_final = base_circuit(data, anc, 2)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_30_5() -> None :
-            data = array(qubit() for _ in range(30))
-            anc  = array(qubit() for _ in range(29))
-            anc_final = base_circuit(data, anc, 5)
-            discard_array(anc_final)
-
-        @guppy
-        def circuit_30_20() -> None :
-            data = array(qubit() for _ in range(30))
-            anc  = array(qubit() for _ in range(29))
-            anc_final = base_circuit(data, anc, 20)
-            discard_array(anc_final)
-
-
-        match (self.n, self.steps) :
-            case (3, 2) : return [circuit_3_2]
-            case (3, 5) : return [circuit_3_5]
-            case (3, 20) : return [circuit_3_20]
-            case (5, 2) : return [circuit_5_2]
-            case (5, 5) : return [circuit_5_5]
-            case (5, 20) : return [circuit_5_20]
-            case (10, 2) : return [circuit_10_2]
-            case (10, 5) : return [circuit_10_5]
-            case (10, 20) : return [circuit_10_20]
-            case (30, 2) : return [circuit_30_2]
-            case (30, 5) : return [circuit_30_5]
-            case (30, 20) : return [circuit_30_20]
-
-        raise ValueError(f"Only choices are {self.choices}")
+        return [guppy_circuit]
 
 
     def guppy_score(self, results_list) :

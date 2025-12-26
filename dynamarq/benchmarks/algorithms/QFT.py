@@ -34,7 +34,6 @@ class QFT(Benchmark):
 
 
     def qiskit_circuits(self, mcm=True, stretch_dd=False) :
-        """Generate an n-qubit GHZ circuit"""
         circuits = []
         for s in self.secret_ints:
             qr = QuantumRegister(self.n)
