@@ -61,6 +61,7 @@ class QiskitMetrics() :
                 'num_gates',
                 'num_gates_measure_reset',
                 'num_gates_measure_reset_ff',
+                'system_qubit_ratio',
                 'critical_path_quantum',
                 'critical_path_quantum_classical',
                 'mcm_depth_ratio',
@@ -99,6 +100,8 @@ class QiskitMetrics() :
 
         metrics['num_gates_measure_reset_ff'] = self.compute_circuit_num_gates(
                 circuit, count_measure=True, count_reset=True, count_ff=True)
+
+        metrics['system_qubit_ratio'] = self.compute_circuit_system_qubit_ratio()
 
         metrics['critical_path_quantum'] = self.compute_circuit_critical_depth_quantum(circuit)
 
@@ -181,6 +184,41 @@ class QiskitMetrics() :
                 return 1.0 / 16.0
 
         return 0.5
+
+
+    def compute_circuit_system_qubit_ratio(self) -> float :
+
+        if 'GHZ_' in self.benchmark.name() :
+            return self.benchmark.n / (2*self.benchmark.n-1)
+
+        if 'GHZReset_' in self.benchmark.name() :
+            return (self.benchmark.n+1) / (2*self.benchmark.n)
+
+        if 'CNOTLadder_' in self.benchmark.name() :
+            return self.benchmark.n / (2*self.benchmark.n-1)
+
+        if 'Fanout_' in self.benchmark.name() :
+            return (self.benchmark.n+1) / (2*self.benchmark.n+1)
+
+        if 'LongRangeCNOT_' in self.benchmark.name() :
+            return 2 / (2+self.benchmark.n)
+
+        if 'LongRangeCNOTSparse_' in self.benchmark.name() :
+            return (self.benchmark.n+1) / (2*self.benchmark.n+1)
+
+        if 'RepetitionCode_' in self.benchmark.name() :
+            return self.benchmark.n / (2*self.benchmark.n-1)
+
+        if self.benchmark.name() == 'FiveQubitCode' :
+            return 0.5
+
+        if 'IPE_' in self.benchmark.name() :
+            return 0.5
+
+        if 'TFIM_' in self.benchmark.name() :
+            return self.benchmark.n / (2*self.benchmark.n-1)
+
+        return 1.0
 
 
     def compute_circuit_object_depths(self,
