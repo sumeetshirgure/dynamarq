@@ -11,7 +11,7 @@ from qiskit.quantum_info import hellinger_fidelity
 import guppylang
 from guppylang import guppy
 
-from guppylang.std.builtins import owned, array, result, panic
+from guppylang.std.builtins import owned, array, result, comptime
 from guppylang.std.quantum import qubit, measure, measure_array, reset, h, cx, x
 
 
@@ -23,9 +23,8 @@ class GHZReset(Benchmark) :
     the experimental and ideal probability distributions.
     """
     def __init__(self, num_qubits: int) :
-        self.choices = [3, 5, 11, 15, 21, 25, 29]
         self.n = num_qubits
-        assert self.n in self.choices, f"n(={num_qubits}) must be among {self.choices}"
+        assert self.n > 1 and self.n % 2 == 1, f"{self.n} must be an odd integer > 1"
 
 
     def name(self) :
@@ -46,8 +45,6 @@ class GHZReset(Benchmark) :
 
 
     def qiskit_circuits(self, mcm = True, stretch_dd = False) :
-        assert self.n > 1 and self.n % 2 == 1, f"{self.n} must be an odd integer > 1"
-
         num_data_qubits = int( (self.n + 1) / 2 )
         num_ancillas    = self.n - num_data_qubits
 
@@ -103,13 +100,13 @@ class GHZReset(Benchmark) :
 
 
     def guppy_circuits(self) :
-        assert self.n > 1 and self.n % 2 == 1, f"{self.n} must be an odd integer > 1"
-
         n = guppy.nat_var('n')
         n1 = guppy.nat_var('n1')
 
         @guppy
-        def base_circuit(data: array[qubit, n] @owned, anc: array[qubit, n1] @owned) -> None:
+        def base_circuit(
+                data: array[qubit, n] @owned,
+                anc: array[qubit, n1] @owned) -> None:
             for i in range(n) : h(data[i])
             for i in range(n1) : cx(data[i], anc[i])
             for i in range(n1) : cx(data[i+1], anc[i])
@@ -127,58 +124,13 @@ class GHZReset(Benchmark) :
                 if i < n1 :
                     result('meas', meas1[i])
 
-        @guppy
-        def circuit_3() -> None :
-            data = array(qubit() for _ in range(2))
-            anc  = array(qubit() for _ in range(1))
+        @guppy.comptime
+        def guppy_circuit() -> None :
+            data = array(qubit() for _ in range(self.n//2+1))
+            anc  = array(qubit() for _ in range(self.n//2))
             base_circuit(data, anc)
 
-        @guppy
-        def circuit_5() -> None :
-            data = array(qubit() for _ in range(3))
-            anc  = array(qubit() for _ in range(2))
-            base_circuit(data, anc)
-
-        @guppy
-        def circuit_11() -> None :
-            data = array(qubit() for _ in range(6))
-            anc  = array(qubit() for _ in range(5))
-            base_circuit(data, anc)
-
-        @guppy
-        def circuit_15() -> None :
-            data = array(qubit() for _ in range(8))
-            anc  = array(qubit() for _ in range(7))
-            base_circuit(data, anc)
-
-        @guppy
-        def circuit_21() -> None :
-            data = array(qubit() for _ in range(11))
-            anc  = array(qubit() for _ in range(10))
-            base_circuit(data, anc)
-
-        @guppy
-        def circuit_25() -> None :
-            data = array(qubit() for _ in range(13))
-            anc  = array(qubit() for _ in range(12))
-            base_circuit(data, anc)
-
-        @guppy
-        def circuit_29() -> None :
-            data = array(qubit() for _ in range(15))
-            anc  = array(qubit() for _ in range(14))
-            base_circuit(data, anc)
-
-        match self.n :
-            case 3  : return [circuit_3]
-            case 5  : return [circuit_5]
-            case 11 : return [circuit_11]
-            case 15 : return [circuit_15]
-            case 21 : return [circuit_21]
-            case 25 : return [circuit_25]
-            case 29 : return [circuit_29]
-
-        raise ValueError(f"Only choices are {self.choices}")
+        return [guppy_circuit]
 
 
     def qiskit_score(self, counts_list) -> float:
