@@ -1,6 +1,6 @@
 import random
 from dynamarq.benchmark import Benchmark
-from dynamarq.qiskit_clifford_dfe import clifford_dfe, expectation_from_counts
+from dynamarq.clifford_dfe import qiskit_clifford_dfe, expectation_from_counts
 
 import qiskit
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
@@ -27,7 +27,8 @@ class CNOTLadder(Benchmark):
         random.seed(1)
 
         # Initialize DFE SPAM circuits.
-        self.dfe_subcircuits = clifford_dfe(self.clifford_repr, data_qubits, num_dfe_samples)
+        self.qiskit_dfe_subcircuits = qiskit_clifford_dfe(
+                self.clifford_repr, data_qubits, num_dfe_samples)
 
 
     def name(self) :
@@ -97,7 +98,7 @@ class CNOTLadder(Benchmark):
         """
         circuits = []
         dynamic_circuit = self.dynamic_circuit(mcm, stretch_dd)
-        for sp_circ, meas_circ, meas_pauli in self.dfe_subcircuits :
+        for sp_circ, meas_circ, meas_pauli in self.qiskit_dfe_subcircuits :
             qc = QuantumCircuit(self.n+self.n-1, self.n+self.n-1)
             qc.compose(sp_circ, range(self.n+self.n-1), inplace=True)
             qc.compose(dynamic_circuit, range(self.n+self.n-1), range(self.n+self.n-1), inplace=True)
@@ -112,7 +113,7 @@ class CNOTLadder(Benchmark):
         Compute the direct fidelity estimate (DFE) for the implemented Clifford circuit.
         """
         fidelity_sum = 0.0
-        for dfe_circ, counts in zip(self.dfe_subcircuits, counts_list) :
+        for dfe_circ, counts in zip(self.qiskit_dfe_subcircuits, counts_list) :
             sp_circ, meas_circ, meas_pauli = dfe_circ
             estimate = expectation_from_counts(meas_pauli, counts)
             fidelity_sum += estimate

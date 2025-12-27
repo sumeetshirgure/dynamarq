@@ -72,7 +72,7 @@ def expectation_from_counts(pauli: Pauli, counts: dict) :
     return expectation / total_shots
 
 
-def clifford_dfe(clifford: Clifford, data_qubits=None, num_samples: int=30) :
+def qiskit_clifford_dfe(clifford: Clifford, data_qubits=None, num_samples: int=30) :
     """
     Sample `num_samples` state preparation and measurement subcircuits
     the direct fidelity estimation (DFE) of a given Clifford circuit.
