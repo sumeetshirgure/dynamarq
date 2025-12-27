@@ -219,7 +219,7 @@ class TFIM(Benchmark) :
         mz_ideal = self.qiskit_average_magnetization(AerSimulator(method='matrix_product_state').run(
             self.reference_circuits()[0], shots=10000).result().get_counts())
         mz_exp = self.guppy_average_magnetization(device_hist)
-        return 1 - abs(mz_ideal - mz_exp) / 2
+        return 1 - abs(mz_ideal - mz_exp) / abs(2 * mz_ideal)
 
 
     def guppy_average_magnetization(self, counts):
@@ -256,4 +256,4 @@ class TFIM(Benchmark) :
         mz_ideal = self.qiskit_average_magnetization(AerSimulator(method='matrix_product_state').run(
                 self.reference_circuits()[0], shots=10000).result().get_counts())
         mz_exp = self.qiskit_average_magnetization(counts_list[0])
-        return 1 - abs(mz_ideal - mz_exp) / 2
+        return 1 - abs(mz_ideal - mz_exp) / abs(2 * mz_ideal)
