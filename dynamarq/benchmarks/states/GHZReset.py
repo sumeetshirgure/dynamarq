@@ -130,7 +130,7 @@ class GHZReset(Benchmark) :
             anc  = array(qubit() for _ in range(self.n//2))
             base_circuit(data, anc)
 
-        return [guppy_circuit]
+        return [guppy_circuit.compile()]
 
 
     def qiskit_score(self, counts_list) -> float:

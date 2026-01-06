@@ -112,7 +112,7 @@ class GHZ(Benchmark) :
                 parity = parity ^ int(cr[i])
                 if parity == 1 : x(data[i+1])
             meas = measure_array(data)
-            for v in meas : result('meas', v)
+            result('meas', meas)
 
         @guppy.comptime
         def guppy_circuit() -> None :
@@ -120,7 +120,7 @@ class GHZ(Benchmark) :
             anc  = array(qubit() for _ in range(self.n-1))
             base_circuit(data, anc)
 
-        return [guppy_circuit]
+        return [guppy_circuit.compile()]
 
     def qiskit_score(self, counts_list) -> float:
         """Compute the Hellinger fidelity between the experimental and ideal
