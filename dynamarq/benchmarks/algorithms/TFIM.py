@@ -188,7 +188,7 @@ class TFIM(Benchmark) :
                 anc = array(qubit() for _ in range(n1))
 
             meas = measure_array(data)
-            for v in meas : result('meas', v)
+            result('meas', meas)
 
             return anc
 
@@ -199,7 +199,7 @@ class TFIM(Benchmark) :
             anc_final = base_circuit(data, anc, self.steps)
             discard_array(anc_final)
 
-        return [guppy_circuit]
+        return [guppy_circuit.compile()]
 
 
     def guppy_score(self, results_list) :
