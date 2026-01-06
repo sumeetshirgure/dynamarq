@@ -72,7 +72,7 @@ def expectation_from_counts(pauli: Pauli, counts: dict) :
     return expectation / total_shots
 
 
-def qiskit_clifford_dfe(clifford: Clifford, data_qubits=None, num_samples: int=30) :
+def clifford_dfe(clifford: Clifford, data_qubits=None, num_samples: int=30) :
     """
     Sample `num_samples` state preparation and measurement subcircuits
     the direct fidelity estimation (DFE) of a given Clifford circuit.
@@ -83,10 +83,11 @@ def qiskit_clifford_dfe(clifford: Clifford, data_qubits=None, num_samples: int=3
     result = []
     for sample_id in range(num_samples) :
         random_pauli_str = sample_random_pauli(n, data_qubits)
-        pauli = Pauli( random_pauli_str )
-        state_prep_layer = prep_eigenstate(pauli)
-        pauli = pauli.evolve(clifford, frame='s')
-        measurement_layer = measure_rotation_for_pauli(pauli)
-        measurement_pauli = pauli.evolve(measurement_layer, frame='s')
-        result.append((state_prep_layer, measurement_layer, measurement_pauli))
+        prep_pauli = Pauli( random_pauli_str )
+        state_prep_layer = prep_eigenstate(prep_pauli)
+        conj_pauli = prep_pauli.evolve(clifford, frame='s')
+        measurement_layer = measure_rotation_for_pauli(conj_pauli)
+        meas_pauli = conj_pauli.evolve(measurement_layer, frame='s')
+        result.append((state_prep_layer, measurement_layer,
+                       meas_pauli, prep_pauli, conj_pauli))
     return result

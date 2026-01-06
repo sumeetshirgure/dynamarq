@@ -11,7 +11,7 @@ from qiskit.quantum_info import hellinger_fidelity
 import guppylang
 from guppylang import guppy
 
-from guppylang.std.builtins import owned, array, result, panic
+from guppylang.std.builtins import owned, array, result
 from guppylang.std.quantum import qubit, measure, measure_array, h, cx, cz, x, y, z
 
 

@@ -1,4 +1,5 @@
 qiskit
 qiskit-ibm-runtime
 guppylang
+selene-sim
 networkx
