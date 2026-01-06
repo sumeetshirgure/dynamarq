@@ -326,9 +326,7 @@ class FiveQubitCode(Benchmark) :
             init_state = True
             five_qubit_code(data, anc, stab, result_qubit, init_state)
 
-        return [fqc0, fqc1]
-
-
+        return [fqc0.compile(), fqc1.compile()]
 
 
     def guppy_score(self, results_list) :

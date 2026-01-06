@@ -169,7 +169,7 @@ class RepetitionCode(Benchmark) :
             if syndrome_value == 3 : x(data[1])
             # Final readout
             meas = measure_array(data)
-            for v in meas : result('meas', v)
+            result('meas', meas)
 
         @guppy
         def circuit_3_plus() -> None :
@@ -202,7 +202,7 @@ class RepetitionCode(Benchmark) :
             h(data[0])
             # Final readout
             meas = measure_array(data)
-            for v in meas : result('meas', v)
+            result('meas', meas)
 
         @guppy
         def circuit_5_ket1() -> None :
@@ -253,7 +253,7 @@ class RepetitionCode(Benchmark) :
             if syndrome_value == 4  : x(data[3]); x(data[4])
             # Final readout
             meas = measure_array(data)
-            for v in meas : result('meas', v)
+            result('meas', meas)
 
         @guppy
         def circuit_5_plus() -> None :
@@ -310,11 +310,11 @@ class RepetitionCode(Benchmark) :
             cx(data[0], data[1])
             h(data[0])
             meas = measure_array(data)
-            for v in meas : result('meas', v)
+            result('meas', meas)
 
         match self.n :
-            case 3 : return [circuit_3_ket1, circuit_3_plus]
-            case 5 : return [circuit_5_ket1, circuit_5_plus]
+            case 3 : return [circuit_3_ket1.compile(), circuit_3_plus.compile()]
+            case 5 : return [circuit_5_ket1.compile(), circuit_5_plus.compile()]
 
         raise ValueError(f"Only {self.choices} are supported.")
 
