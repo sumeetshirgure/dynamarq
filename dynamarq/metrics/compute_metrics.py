@@ -56,11 +56,13 @@ class QiskitMetrics() :
         return [
                 'depth',
                 'depth_ff',
-                'liveness',
-                'liveness_ff',
                 'num_gates',
                 'num_gates_measure_reset',
                 'num_gates_measure_reset_ff',
+                'num_system_qubits',
+                'num_total_qubits',
+                'liveness',
+                'liveness_ff',
                 'system_qubit_ratio',
                 'critical_path_quantum',
                 'critical_path_quantum_classical',
@@ -88,10 +90,6 @@ class QiskitMetrics() :
 
         metrics['depth_ff'] = self.compute_circuit_object_depths(circuit, count_ff=True)[1]
 
-        metrics['liveness'] = self.compute_circuit_liveness(circuit, count_ff=False)
-
-        metrics['liveness_ff'] = self.compute_circuit_liveness(circuit, count_ff=True)
-
         metrics['num_gates'] = self.compute_circuit_num_gates(
                 circuit, count_measure=False, count_reset=False, count_ff=False)
 
@@ -100,6 +98,14 @@ class QiskitMetrics() :
 
         metrics['num_gates_measure_reset_ff'] = self.compute_circuit_num_gates(
                 circuit, count_measure=True, count_reset=True, count_ff=True)
+
+        metrics['num_system_qubits'] = self.compute_circuit_system_qubit_count()
+
+        metrics['num_total_qubits'] = self.compute_circuit_total_qubit_count()
+
+        metrics['liveness'] = self.compute_circuit_liveness(circuit, count_ff=False)
+
+        metrics['liveness_ff'] = self.compute_circuit_liveness(circuit, count_ff=True)
 
         metrics['system_qubit_ratio'] = self.compute_circuit_system_qubit_ratio()
 
@@ -184,6 +190,88 @@ class QiskitMetrics() :
                 return 1.0 / 16.0
 
         return 0.5
+
+
+    def compute_circuit_system_qubit_count(self) -> float :
+
+        if 'GHZ_' in self.benchmark.name() :
+            return self.benchmark.n
+
+        if 'GHZReset_' in self.benchmark.name() :
+            return self.benchmark.n+1
+
+        if 'CNOTLadder_' in self.benchmark.name() :
+            return self.benchmark.n
+
+        if 'Fanout_' in self.benchmark.name() :
+            return self.benchmark.n+1
+
+        if 'LongRangeCNOT_' in self.benchmark.name() :
+            return 2
+
+        if 'LongRangeCNOTSparse_' in self.benchmark.name() :
+            return self.benchmark.n+1
+
+        if 'RepetitionCode_' in self.benchmark.name() :
+            return self.benchmark.n
+
+        if self.benchmark.name() == 'FiveQubitCode' :
+            return 5
+
+        if 'IPE_' in self.benchmark.name() :
+            return 1
+
+        if 'TFIM_' in self.benchmark.name() :
+            return self.benchmark.n
+
+        if 'PartialQFT_' in self.benchmark.name() :
+            return self.benchmark.n
+
+        if 'QFT_' in self.benchmark.name() :
+            return self.benchmark.n
+
+        return 0.0
+
+
+    def compute_circuit_total_qubit_count(self) -> float :
+
+        if 'GHZ_' in self.benchmark.name() :
+            return 2*self.benchmark.n-1
+
+        if 'GHZReset_' in self.benchmark.name() :
+            return 2*self.benchmark.n
+
+        if 'CNOTLadder_' in self.benchmark.name() :
+            return 2*self.benchmark.n-1
+
+        if 'Fanout_' in self.benchmark.name() :
+            return 2*self.benchmark.n+1
+
+        if 'LongRangeCNOT_' in self.benchmark.name() :
+            return 2+self.benchmark.n
+
+        if 'LongRangeCNOTSparse_' in self.benchmark.name() :
+            return 2*self.benchmark.n+1
+
+        if 'RepetitionCode_' in self.benchmark.name() :
+            return 2*self.benchmark.n-1
+
+        if self.benchmark.name() == 'FiveQubitCode' :
+            return 10
+
+        if 'IPE_' in self.benchmark.name() :
+            return 2
+
+        if 'TFIM_' in self.benchmark.name() :
+            return 2*self.benchmark.n-1
+
+        if 'PartialQFT_' in self.benchmark.name() :
+            return self.benchmark.n
+
+        if 'QFT_' in self.benchmark.name() :
+            return self.benchmark.n
+
+        return 0.0
 
 
     def compute_circuit_system_qubit_ratio(self) -> float :
