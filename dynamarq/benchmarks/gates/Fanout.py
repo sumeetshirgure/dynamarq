@@ -251,8 +251,6 @@ class Fanout(Benchmark):
 
         return circuits
 
-        raise NotImplementedError("Direct fidelity estimation is not available for guppy")
-
     def guppy_score(self, results_list) :
         fidelity_sum = 0.0
         for dfe_subcircuit, results in zip(self.dfe_subcircuits, results_list) :

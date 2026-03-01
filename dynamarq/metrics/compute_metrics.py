@@ -331,10 +331,16 @@ class QiskitMetrics() :
 
                 branch_probability = self.get_instruction_branch_probability(instruction)
 
-                _, if_subcircuit_total_depth = self.compute_circuit_object_depths(
-                        instruction.params[0])
-                _, else_subcircuit_total_depth = self.compute_circuit_object_depths(
-                        instruction.params[1])
+                if len(instruction.params) > 0 :
+                    _, if_subcircuit_total_depth = self.compute_circuit_object_depths(
+                            instruction.params[0])
+                else :
+                    if_subcircuit_total_depth = 0
+                if len(instruction.params) > 1 :
+                    _, else_subcircuit_total_depth = self.compute_circuit_object_depths(
+                            instruction.params[1])
+                else :
+                    else_subcircuit_total_depth = 0
 
                 added_depth = branch_probability * if_subcircuit_total_depth + \
                         (1-branch_probability) * else_subcircuit_total_depth
@@ -369,10 +375,16 @@ class QiskitMetrics() :
 
                 branch_probability = self.get_instruction_branch_probability(instruction)
 
-                if_subcircuit_total_activity = \
-                        self.compute_circuit_total_active_time(instruction.params[0])
-                else_subcircuit_total_activity = \
-                        self.compute_circuit_total_active_time(instruction.params[1])
+                if len(instruction.params) > 0 :
+                    if_subcircuit_total_activity = \
+                            self.compute_circuit_total_active_time(instruction.params[0])
+                else :
+                    if_subcircuit_total_activity = 0
+                if len(instruction.params) > 1 :
+                    else_subcircuit_total_activity = \
+                            self.compute_circuit_total_active_time(instruction.params[1])
+                else :
+                    else_subcircuit_total_activity = 0
 
                 added_activity += branch_probability * if_subcircuit_total_activity + \
                         (1 - branch_probability) * else_subcircuit_total_activity
@@ -433,10 +445,16 @@ class QiskitMetrics() :
                 branch_probability = \
                         self.get_instruction_branch_probability(instruction)
 
-                if_subcircuit_total_gates = self.compute_circuit_num_gates(
-                        instruction.params[0], count_measure, count_reset, count_ff)
-                else_subcircuit_total_gates = self.compute_circuit_num_gates(
-                        instruction.params[1], count_measure, count_reset, count_ff)
+                if len(instruction.params) > 0 :
+                    if_subcircuit_total_gates = self.compute_circuit_num_gates(
+                            instruction.params[0], count_measure, count_reset, count_ff)
+                else :
+                    if_subcircuit_total_gates = 0
+                if len(instruction.params) > 1 :
+                    else_subcircuit_total_gates = self.compute_circuit_num_gates(
+                            instruction.params[1], count_measure, count_reset, count_ff)
+                else :
+                    else_subcircuit_total_gates = 0
 
                 added_num_gates += branch_probability * if_subcircuit_total_gates + \
                         (1 - branch_probability) * else_subcircuit_total_gates
@@ -475,10 +493,16 @@ class QiskitMetrics() :
                     branch_probability = \
                             self.get_node_branch_probability(succ)
 
-                    _, if_subcircuit_critical_depth = \
-                            self.get_circuit_critical_path(succ.params[0], count_ff)
-                    _, else_subcircuit_critical_depth = \
-                            self.get_circuit_critical_path(succ.params[1], count_ff)
+                    if len(succ.params) > 0 :
+                        _, if_subcircuit_critical_depth = \
+                                self.get_circuit_critical_path(succ.params[0], count_ff)
+                    else :
+                        if_subcircuit_critical_depth = 0
+                    if len(succ.params) > 1 :
+                        _, else_subcircuit_critical_depth = \
+                                self.get_circuit_critical_path(succ.params[1], count_ff)
+                    else :
+                        else_subcircuit_critical_depth = 0
 
                     added_distance = branch_probability * if_subcircuit_critical_depth + \
                             (1 - branch_probability) * else_subcircuit_critical_depth
@@ -521,10 +545,16 @@ class QiskitMetrics() :
                 branch_probability = \
                         self.get_instruction_branch_probability(instruction)
 
-                if_subcircuit_total_gates = self.compute_circuit_num_gates(
-                        instruction.params[0], count_measure, count_reset, count_ff)
-                else_subcircuit_total_gates = self.compute_circuit_num_gates(
-                        instruction.params[1], count_measure, count_reset, count_ff)
+                if len(instruction.params) > 0 :
+                    if_subcircuit_total_gates = self.compute_circuit_num_gates(
+                            instruction.params[0], count_measure, count_reset, count_ff)
+                else :
+                    if_subcircuit_total_gates = 0
+                if len(instruction.params) > 1 :
+                    else_subcircuit_total_gates = self.compute_circuit_num_gates(
+                            instruction.params[1], count_measure, count_reset, count_ff)
+                else :
+                    else_subcircuit_total_gates = 0
 
                 num_branch_gates += branch_probability * if_subcircuit_total_gates + \
                         (1 - branch_probability) * else_subcircuit_total_gates 
@@ -569,10 +599,16 @@ class QiskitMetrics() :
             elif node.op.name == 'if_else' :
                 branch_probability = self.get_node_branch_probability(node)
 
-                if_subcircuit_total_gates = self.compute_circuit_num_gates(
-                        node.params[0], count_measure, count_reset, count_ff)
-                else_subcircuit_total_gates = self.compute_circuit_num_gates(
-                        node.params[1], count_measure, count_reset, count_ff)
+                if len(node.params) > 0 :
+                    if_subcircuit_total_gates = self.compute_circuit_num_gates(
+                            node.params[0], count_measure, count_reset, count_ff)
+                else :
+                    if_subcircuit_total_gates = 0
+                if len(node.params) > 1 :
+                    else_subcircuit_total_gates = self.compute_circuit_num_gates(
+                            node.params[1], count_measure, count_reset, count_ff)
+                else :
+                    else_subcircuit_total_gates = 0
 
                 num_two_qubit_longest_path += \
                         branch_probability * if_subcircuit_total_gates + \
