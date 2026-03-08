@@ -1,1 +1,2 @@
-from .compute_metrics import QiskitMetrics
+from .compute_qiskit_metrics import QiskitMetrics
+from .compute_quantinuum_metrics import QuantinuumMetrics
