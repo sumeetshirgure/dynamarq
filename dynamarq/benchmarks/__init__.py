@@ -20,6 +20,7 @@ from .algorithms import (
 from .eccs import (
         RepetitionCode,
         FiveQubitCode,
+        SteaneCode,
     )
 
 __all__ = [
@@ -35,6 +36,7 @@ __all__ = [
         "PartialQFT",
         "RepetitionCode",
         "FiveQubitCode",
+        "SteaneCode",
         ]
 
 
@@ -56,6 +58,7 @@ def get_testbench() :
     bench.append(RepetitionCode.RepetitionCode(3))
     bench.append(RepetitionCode.RepetitionCode(5))
     bench.append(FiveQubitCode.FiveQubitCode())
+    bench.append(SteaneCode.SteaneCode())
 
     qft_params = [2, 3, 5, 10, 15, 20]
     for param in qft_params : bench.append(QFT.QFT(param))

@@ -6,8 +6,6 @@ from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit.classical import expr
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 
-from qiskit.quantum_info import hellinger_fidelity
-
 import guppylang
 from guppylang import guppy
 
