@@ -77,6 +77,8 @@ class SteaneCode(Benchmark) :
                     circuit.cx(zanc[i], data[q])
                 circuit.h(zanc[i])
 
+            circuit.barrier()
+
             if mcm :
                 for i in range(3) :
                     circuit.append(MidCircuitMeasure(), [xanc[i]], [xsyn[i]])
