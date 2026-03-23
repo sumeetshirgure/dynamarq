@@ -20,6 +20,7 @@ class QiskitMetrics() :
         if not isinstance(backend, IBMBackend) :
             raise NotImplementedError("Currently only IBM backends are supported.")
     
+        rx_errors  = []
         m2_errors = []
         q2_errors = []
         for gate in backend.properties().gates :
@@ -27,10 +28,13 @@ class QiskitMetrics() :
                 m2_errors += [gate.parameters[0].value]
             if len(gate.qubits) == 2 :
                 q2_errors += [gate.parameters[0].value]
+            if 'rx' in gate.name :
+                rx_errors += [gate.parameters[0].value]
 
         if len(m2_errors) == 0 :
             raise ValueError(f"MidCircuitMeasure not supported on {backend.name}")
 
+        self.median_rx_error = list(sorted(rx_errors))[len(rx_errors)//2]
         self.median_m2_error = list(sorted(m2_errors))[len(m2_errors)//2]
         self.median_2q_error = list(sorted(q2_errors))[len(q2_errors)//2]
 
@@ -151,16 +155,16 @@ class QiskitMetrics() :
 
 
     def get_instruction_branch_probability(self, instruction) :
-        p, m = self.median_2q_error, self.median_m2_error
+        p, m, s = self.median_2q_error, self.median_m2_error, self.median_rx_error
 
         if self.benchmark.name() == 'RepetitionCode_3' :
             # Compute most significant bit flip error rate on ancillas.
-            bp = 2 * p * (1-p)**3 * (1-m) ** 2 + (1-p)**4 * m * (1-m)
+            bp = 2 * p + m + s
             return bp
 
         if self.benchmark.name() == 'RepetitionCode_5' :
             # Compute most significant bit flip error rate on ancillas.
-            bp = 2 * p * (1-p)**7 * (1-m) ** 4 + (1-p) ** 8 * m * (1-m)**3
+            bp = 2 * p + m + s
             return bp
 
         if self.benchmark.name() == 'FiveQubitCode' :
@@ -168,26 +172,34 @@ class QiskitMetrics() :
             if instruction.clbits[0]._register.name == 'syn' :
                 return 1.0 / 16.0
 
+        if self.benchmark.name() == 'SteaneCode' :
+            bp = 4 * p + m + s
+            return bp
+
         return 0.5
 
 
     def get_node_branch_probability(self, node) :
-        p, m = self.median_2q_error, self.median_m2_error
+        p, m, s = self.median_2q_error, self.median_m2_error, self.median_rx_error
 
         if self.benchmark.name() == 'RepetitionCode_3' :
             # Compute most significant bit flip error rate on ancillas.
-            bp = 2 * p * (1-p)**3 * (1-m) ** 2 + (1-p)**4 * m * (1-m)
+            bp = 2 * p + m + s
             return bp
 
         if self.benchmark.name() == 'RepetitionCode_5' :
             # Compute most significant bit flip error rate on ancillas.
-            bp = 2 * p * (1-p)**7 * (1-m) ** 4 + (1-p) ** 8 * m * (1-m)**3
+            bp = 2 * p + m + s
             return bp
 
         if self.benchmark.name() == 'FiveQubitCode' :
             # Branch probability calculation based on symmetry.
             if node.cargs[0]._register.name == 'syn' :
                 return 1.0 / 16.0
+
+        if self.benchmark.name() == 'SteaneCode' :
+            bp = 4 * p + m + s
+            return bp
 
         return 0.5
 

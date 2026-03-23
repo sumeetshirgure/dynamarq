@@ -19,6 +19,7 @@ class QuantinuumMetrics() :
         # Median measurement and 2Q error rates taken from here.
         # https://docs.quantinuum.com/systems/user_guide/emulator_user_guide/emulators/helios_emulators.html
 
+        self.median_rx_error = 2.5e-5
         self.median_m2_error = 1e-06
         self.median_2q_error = 8e-4
 
@@ -135,16 +136,16 @@ class QuantinuumMetrics() :
 
 
     def get_instruction_branch_probability(self, instruction) :
-        p, m = self.median_2q_error, self.median_m2_error
+        p, m, s = self.median_2q_error, self.median_m2_error, self.median_rx_error
 
         if self.benchmark.name() == 'RepetitionCode_3' :
             # Compute most significant bit flip error rate on ancillas.
-            bp = 2 * p * (1-p)**3 * (1-m) ** 2 + (1-p)**4 * m * (1-m)
+            bp = 2 * p + m + s
             return bp
 
         if self.benchmark.name() == 'RepetitionCode_5' :
             # Compute most significant bit flip error rate on ancillas.
-            bp = 2 * p * (1-p)**7 * (1-m) ** 4 + (1-p) ** 8 * m * (1-m)**3
+            bp = 2 * p + m + s
             return bp
 
         if self.benchmark.name() == 'FiveQubitCode' :
@@ -152,26 +153,34 @@ class QuantinuumMetrics() :
             if instruction.clbits[0]._register.name == 'syn' :
                 return 1.0 / 16.0
 
+        if self.benchmark.name() == 'SteaneCode' :
+            bp = 4 * p + m + s
+            return bp
+
         return 0.5
 
 
     def get_node_branch_probability(self, node) :
-        p, m = self.median_2q_error, self.median_m2_error
+        p, m, s = self.median_2q_error, self.median_m2_error, self.median_rx_error
 
         if self.benchmark.name() == 'RepetitionCode_3' :
             # Compute most significant bit flip error rate on ancillas.
-            bp = 2 * p * (1-p)**3 * (1-m) ** 2 + (1-p)**4 * m * (1-m)
+            bp = 2 * p + m + s
             return bp
 
         if self.benchmark.name() == 'RepetitionCode_5' :
             # Compute most significant bit flip error rate on ancillas.
-            bp = 2 * p * (1-p)**7 * (1-m) ** 4 + (1-p) ** 8 * m * (1-m)**3
+            bp = 2 * p + m + s
             return bp
 
         if self.benchmark.name() == 'FiveQubitCode' :
             # Branch probability calculation based on symmetry.
             if node.cargs[0]._register.name == 'syn' :
                 return 1.0 / 16.0
+
+        if self.benchmark.name() == 'SteaneCode' :
+            bp = 4 * p + m + s
+            return bp
 
         return 0.5
 
