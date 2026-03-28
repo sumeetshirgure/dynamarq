@@ -1,6 +1,6 @@
 from ..benchmark import Benchmark
 
-import networkx as nx
+from collections import defaultdict
 
 from qiskit import transpile, QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit import CircuitInstruction, Qubit
@@ -37,6 +37,7 @@ class QuantinuumMetrics() :
 
         return benchmark_metrics
 
+
     def get_metric_names(self) :
         return [
                 'depth',
@@ -52,11 +53,11 @@ class QuantinuumMetrics() :
                 'critical_path_quantum',
                 'critical_path_quantum_classical',
                 'mcm_depth_ratio',
-                'mcm_depth_ratio_ff',
                 'mcm_plus_ff_depth_ratio',
                 'parallelism',
                 'parallelism_ff',
-                'communication',
+                'quantum_communication',
+                'quantum_classical_communication',
                 'quantum_entanglement',
                 'quantum_entanglement_measure_reset',
                 'quantum_entanglement_measure_reset_ff',
@@ -101,9 +102,6 @@ class QuantinuumMetrics() :
 
         metrics['mcm_depth_ratio'] = self.compute_circuit_mcm_depth_ratio(circuit)
 
-        metrics['mcm_depth_ratio_ff'] = \
-                self.compute_circuit_mcm_depth_ratio(circuit, count_ff=True)
-
         metrics['mcm_plus_ff_depth_ratio'] = \
                 self.compute_circuit_mcm_plus_ff_depth_ratio(circuit)
 
@@ -111,7 +109,10 @@ class QuantinuumMetrics() :
 
         metrics['parallelism_ff'] = self.compute_circuit_parallelism(circuit, count_ff=True)
 
-        metrics['communication'] = self.compute_circuit_communication(circuit)
+        metrics['quantum_communication'] = self.compute_circuit_quantum_communication(circuit)
+
+        metrics['quantum_classical_communication'] = \
+                self.compute_circuit_quantum_classical_communication(circuit)
 
         metrics['quantum_entanglement'] = self.compute_circuit_quantum_entanglement(
                 circuit, count_measure=False, count_reset=False)
@@ -622,29 +623,30 @@ class QuantinuumMetrics() :
 
     def compute_circuit_mcm_depth_ratio(self,
                                         circuit : QuantumCircuit,
-                                        count_ff:bool = False,
                                         ) -> float :
         dag = circuit_to_dag(circuit)
         mid_measurement_depth = 0
+        total_layers = 0
         for layer in dag.layers():
+            total_layers += 1
             layer_ops = layer['graph'].op_nodes()
             for node in layer_ops:
                 if node.name == 'measure_2' :
                     mid_measurement_depth += 1
                     break
-        _, circuit_depth = \
-                self.compute_circuit_object_depths(circuit, count_ff=count_ff)
-        if circuit_depth == 0 :
+        if total_layers == 0 :
             return 0
-        return mid_measurement_depth / circuit_depth
+        return mid_measurement_depth / total_layers
 
 
     def compute_circuit_mcm_plus_ff_depth_ratio(self,
                                                 circuit : QuantumCircuit,
                                                 ) -> float :
         dag = circuit_to_dag(circuit)
+        total_layers = 0
         mcm_ff_depth = 0
         for layer in dag.layers():
+            total_layers += 1
             layer_ops = layer['graph'].op_nodes()
             for node in layer_ops:
                 if node.name == 'measure_2' :
@@ -653,11 +655,9 @@ class QuantinuumMetrics() :
                 elif node.is_control_flow() and node.op.name == 'if_else' :
                     mcm_ff_depth += 1
                     break
-        _, circuit_depth = \
-                self.compute_circuit_object_depths(circuit, count_ff=True)
-        if circuit_depth == 0 :
+        if total_layers == 0 :
             return 0
-        return mcm_ff_depth / circuit_depth
+        return mcm_ff_depth / total_layers
 
 
     def compute_circuit_parallelism(self,
@@ -672,45 +672,81 @@ class QuantinuumMetrics() :
         return max((num_gates / depth - 1) / (circuit.num_qubits - 1), 0)
 
 
-    def get_connectivity_graph(self,
-                               circuit : QuantumCircuit,
-                               ) -> nx.Graph :
+    def get_quantum_connectivity_graph(self,
+                                       circuit : QuantumCircuit,
+                                       conditioned_qubits : list = [],
+                                       ) -> defaultdict :
         dag = circuit_to_dag(circuit)
         dag.remove_all_ops_named('barrier')
-        graph = nx.Graph()
-        clbit_map = dict()
-        graph.add_nodes_from(dag.qubits)
+        graph = set()
         for node in dag.topological_op_nodes() :
-            if node.op.name in ['measure', 'measure_2'] :
-                clbit_map[node.cargs[0]] = node.qargs[0]
-            elif node.is_control_flow() and node.op.name == 'if_else' :
-                branch_probability = \
-                        self.get_node_branch_probability(node)
-                for q0 in node.qargs :
-                    for clbit in node.cargs :
-                        if clbit not in clbit_map : continue
-                        q1 = clbit_map[clbit]
-                        edge = (q0, q1)
-                        if edge not in graph.edges() :
-                            graph.add_edge(edge[0], edge[1], weight=branch_probability)
-            elif node.is_standard_gate() :
+            if node.is_standard_gate() :
+                for conditioned_qubit in conditioned_qubits :
+                    for gate_qubit in node.qargs :
+                        graph.add((conditioned_qubit, gate_qubit))
+                        graph.add((gate_qubit, conditioned_qubit))
                 if node.op.num_qubits == 2 :
-                    q0, q1 = node.qargs
-                    edge = (q0, q1)
-                    if edge not in graph.edges() :
-                        graph.add_edge(edge[0], edge[1], weight=1.0)
+                    graph.add((node.qargs[0], node.qargs[1]))
+                    graph.add((node.qargs[1], node.qargs[0]))
         return graph
 
 
-    def compute_circuit_communication(self,
-                                      circuit : QuantumCircuit,
-                                      ) -> float:
+    def compute_circuit_quantum_communication(self,
+                                              circuit : QuantumCircuit,
+                                              ) -> float :
         num_qubits = circuit.num_qubits
-        graph = self.get_connectivity_graph(circuit)
-        degree_sum = sum([graph.degree(n, weight='weight') for n in graph.nodes()])
-        if num_qubits <= 1 :
-            return 0
+        if num_qubits <= 1 : return 0
+        graph = self.get_quantum_connectivity_graph(circuit)
+        degree_sum = len(graph)
         return degree_sum / (num_qubits * (num_qubits - 1))
+
+
+    def compute_circuit_quantum_classical_communication(self,
+                                                        circuit : QuantumCircuit,
+                                                        ) -> float:
+        num_qubits = circuit.num_qubits
+        dag = circuit_to_dag(circuit)
+        if num_qubits <= 1 : return 0
+        dag.remove_all_ops_named('barrier')
+        graph = defaultdict(list)
+        clbit_map = dict()
+        for node in dag.topological_op_nodes() :
+            if node.op.name in ['measure', 'measure_2'] :
+                clbit_map[node.cargs[0]] = node.qargs[0]
+                continue
+            if node.is_standard_gate() and node.op.num_qubits == 2 :
+                graph[(node.qargs[0], node.qargs[1])] += [1.0]
+                graph[(node.qargs[1], node.qargs[0])] += [1.0]
+                continue
+            if node.is_control_flow() and node.op.name == 'if_else' :
+                p = self.get_node_branch_probability(node)
+                subgraph = defaultdict(int)
+                conditioned_bits = list()
+                for carg in node.cargs :
+                    if carg in clbit_map :
+                        conditioned_bits.append(clbit_map[carg]) 
+                if len(node.params) > 0 :
+                    if_subcircuit_subgraph = self.get_quantum_connectivity_graph(
+                            node.params[0], conditioned_bits)
+                    for q0, q1 in if_subcircuit_subgraph :
+                        subgraph[(q0, q1)] += p
+                        subgraph[(q1, q0)] += p
+                if len(node.params) > 1 :
+                    else_subcircuit_subgraph = self.get_quantum_connectivity_graph(
+                            node.params[1], conditioned_bits)
+                    for q1, q0 in else_subcircuit_subgraph :
+                        subgraph[(q0, q1)] += 1-p
+                        subgraph[(q1, q0)] += 1-p
+                for edge, value in subgraph.items() :
+                    graph[edge] += [value]
+        communication = 0
+        for edge, instruction_probabilities in graph.items() :
+            if edge[0] == edge[1] : continue
+            product = 1
+            for instruction_probability in instruction_probabilities :
+                product *= (1 - instruction_probability)
+            communication += 1 - product
+        return communication / (num_qubits * (num_qubits - 1))
 
 
     def compute_circuit_quantum_entanglement(self,
