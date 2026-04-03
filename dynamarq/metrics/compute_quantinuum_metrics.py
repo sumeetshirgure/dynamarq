@@ -152,7 +152,8 @@ class QuantinuumMetrics() :
         if self.benchmark.name() == 'FiveQubitCode' :
             # Branch probability calculation based on symmetry.
             if instruction.clbits[0]._register.name == 'syn' :
-                return 1.0 / 16.0
+                bp = 4 * p + m + s
+                return bp
 
         if self.benchmark.name() == 'SteaneCode' :
             bp = 4 * p + m + s
@@ -177,7 +178,8 @@ class QuantinuumMetrics() :
         if self.benchmark.name() == 'FiveQubitCode' :
             # Branch probability calculation based on symmetry.
             if node.cargs[0]._register.name == 'syn' :
-                return 1.0 / 16.0
+                bp = 4 * p + m + s
+                return bp
 
         if self.benchmark.name() == 'SteaneCode' :
             bp = 4 * p + m + s
