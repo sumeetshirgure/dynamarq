@@ -5,6 +5,7 @@ from .states import (
 
 from .gates import (
         CNOTLadder,
+        InverseLadder,
         Fanout,
         LongRangeCNOT,
         LongRangeCNOTSparse,
@@ -26,7 +27,8 @@ from .eccs import (
 __all__ = [
         "GHZ",
         "GHZReset",
-         "CNOTLadder",
+        "CNOTLadder",
+        "InverseLadder",
         "Fanout",
         "LongRangeCNOT",
         "LongRangeCNOTSparse",
@@ -51,6 +53,7 @@ def get_testbench() :
 
     dfe_params = [2, 3, 5, 10, 15, 20, 25, 30]
     for param in dfe_params : bench.append(CNOTLadder.CNOTLadder(param))
+    for param in dfe_params : bench.append(InverseLadder.InverseLadder(param))
     for param in dfe_params : bench.append(Fanout.Fanout(param))
     for param in dfe_params : bench.append(LongRangeCNOT.LongRangeCNOT(param))
     for param in dfe_params : bench.append(LongRangeCNOTSparse.LongRangeCNOTSparse(param))
