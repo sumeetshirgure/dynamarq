@@ -1,6 +1,6 @@
 [project]
 name = "dynamarq"
-version = "0.3.6"
+version = "0.3.7"
 authors = [
   { name="Sumeet Shirgure", email="sumeetshirgure@gmail.com" },
 ]
