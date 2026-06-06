@@ -1,5 +1,7 @@
 from ..benchmark import Benchmark
 
+import random
+
 from collections import defaultdict
 
 from qiskit import transpile, QuantumCircuit, QuantumRegister, ClassicalRegister
@@ -11,9 +13,13 @@ from qiskit.converters import circuit_to_dag, dag_to_circuit
 
 class QuantinuumMetrics() :
 
-    def __init__(self, benchmark: Benchmark) :
+    def __init__(self, benchmark: Benchmark, delta = 0.0, seed=42) :
         if not isinstance(benchmark, Benchmark) :
             raise ValueError("Benchmark not of type dynamarq.Benchmark")
+
+        if not 0 <= delta < 0.5 :
+            raise ValueError(f"Delta must be in [0, 0.5) but is {delta}")
+
         self.benchmark = benchmark
 
         # Median measurement and 2Q error rates taken from here.
@@ -22,6 +28,7 @@ class QuantinuumMetrics() :
         self.median_rx_error = 2.5e-5
         self.median_m2_error = 1e-06
         self.median_2q_error = 8e-4
+        random.seed(seed)
 
 
     def get_metrics(self) :
@@ -159,7 +166,7 @@ class QuantinuumMetrics() :
             bp = 4 * p + m + s
             return bp
 
-        return 0.5
+        return 0.5 + random.uniform(-delta, delta)
 
 
     def get_node_branch_probability(self, node) :
@@ -185,7 +192,7 @@ class QuantinuumMetrics() :
             bp = 4 * p + m + s
             return bp
 
-        return 0.5
+        return 0.5 + random.uniform(-delta, delta)
 
 
     def compute_circuit_system_qubit_count(self) -> float :

@@ -1,5 +1,7 @@
 from ..benchmark import Benchmark
 
+import random
+
 from collections import defaultdict
 
 from qiskit import transpile, QuantumCircuit, QuantumRegister, ClassicalRegister
@@ -13,13 +15,16 @@ from qiskit.converters import circuit_to_dag, dag_to_circuit
 
 class QiskitMetrics() :
 
-    def __init__(self, benchmark: Benchmark, backend, stretch_dd : bool = False) :
+    def __init__(self, benchmark: Benchmark, backend, stretch_dd : bool = False, delta = 0.0, seed=42) :
         if not isinstance(benchmark, Benchmark) :
             raise ValueError("Benchmark not of type dynamarq.Benchmark")
 
         if not isinstance(backend, IBMBackend) :
             raise NotImplementedError("Currently only IBM backends are supported.")
-    
+
+        if not 0 <= delta < 0.5 :
+            raise ValueError(f"Delta must be in [0, 0.5) but is {delta}")
+
         rx_errors  = []
         m2_errors = []
         q2_errors = []
@@ -41,6 +46,7 @@ class QiskitMetrics() :
         self.benchmark = benchmark
         self.backend = backend
         self.stretch_dd = stretch_dd
+        random.seed(seed)
 
 
     def get_metrics(self) :
@@ -177,7 +183,7 @@ class QiskitMetrics() :
             bp = 4 * p + m + s
             return bp
 
-        return 0.5
+        return 0.5 + random.uniform(-delta, delta)
 
 
     def get_node_branch_probability(self, node) :
@@ -202,7 +208,7 @@ class QiskitMetrics() :
             bp = 4 * p + m + s
             return bp
 
-        return 0.5
+        return 0.5 + random.uniform(-delta, delta)
 
 
     def compute_circuit_system_qubit_count(self) -> float :
