@@ -8,6 +8,7 @@ from .gates import (
         Fanout,
         LongRangeCNOT,
         LongRangeCNOTSparse,
+        RepeatUntilSuccess,
     )
 
 from .algorithms import (
@@ -30,6 +31,7 @@ __all__ = [
         "Fanout",
         "LongRangeCNOT",
         "LongRangeCNOTSparse",
+        "RepeatUntilSuccess",
         "TFIM",
         "IPE",
         "QFT",
@@ -54,6 +56,9 @@ def get_testbench() :
     for param in dfe_params : bench.append(Fanout.Fanout(param))
     for param in dfe_params : bench.append(LongRangeCNOT.LongRangeCNOT(param))
     for param in dfe_params : bench.append(LongRangeCNOTSparse.LongRangeCNOTSparse(param))
+
+    for rep in [1, 3, 5] :
+        bench.append(RepeatUntilSuccess.RepeatUntilSuccess(rep))
 
     bench.append(RepetitionCode.RepetitionCode(3))
     bench.append(RepetitionCode.RepetitionCode(5))
