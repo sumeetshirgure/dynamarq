@@ -47,6 +47,7 @@ class QiskitMetrics() :
         self.backend = backend
         self.stretch_dd = stretch_dd
         random.seed(seed)
+        self.delta = delta
 
 
     def get_metrics(self) :
@@ -183,7 +184,7 @@ class QiskitMetrics() :
             bp = 4 * p + m + s
             return bp
 
-        return 0.5 + random.uniform(-delta, delta)
+        return 0.5 + random.uniform(-self.delta, self.delta)
 
 
     def get_node_branch_probability(self, node) :
@@ -208,7 +209,7 @@ class QiskitMetrics() :
             bp = 4 * p + m + s
             return bp
 
-        return 0.5 + random.uniform(-delta, delta)
+        return 0.5 + random.uniform(-self.delta, self.delta)
 
 
     def compute_circuit_system_qubit_count(self) -> float :

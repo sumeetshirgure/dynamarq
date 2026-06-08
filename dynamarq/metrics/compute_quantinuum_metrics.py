@@ -29,6 +29,7 @@ class QuantinuumMetrics() :
         self.median_m2_error = 1e-06
         self.median_2q_error = 8e-4
         random.seed(seed)
+        self.delta = delta
 
 
     def get_metrics(self) :
@@ -166,7 +167,7 @@ class QuantinuumMetrics() :
             bp = 4 * p + m + s
             return bp
 
-        return 0.5 + random.uniform(-delta, delta)
+        return 0.5 + random.uniform(-self.delta, self.delta)
 
 
     def get_node_branch_probability(self, node) :
@@ -192,7 +193,7 @@ class QuantinuumMetrics() :
             bp = 4 * p + m + s
             return bp
 
-        return 0.5 + random.uniform(-delta, delta)
+        return 0.5 + random.uniform(-self.delta, self.delta)
 
 
     def compute_circuit_system_qubit_count(self) -> float :
